@@ -1,0 +1,39 @@
+<h1 matDialogTitle>{{data.title}}</h1>
+<form [formGroup]="itemForm" (ngSubmit)="submit()">
+    <div fxLayout="row wrap" fxLayout.lt-sm="column">
+        <div fxFlex="100"  class="pr-16">
+            <mat-form-field style="width: 100%;">
+                <mat-select placeholder="{{'CATEGORIA' | translate}}" name="categoria" [(ngModel)]="categoriaDTO.idCategoriaPadre" [ngModelOptions]="{standalone: true}" #miCategoria>
+                    <mat-option value="-1">Sin Categoría Padre</mat-option>
+                    <mat-option *ngFor="let cat of categorias" [value]="cat.idCategoria">
+                    {{ cat.nombre }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div fxFlex="50"  class="pr-16">
+            <mat-form-field class="full-width">
+              <input
+              matInput
+              name="nombre"
+              [formControl]="itemForm.controls['nombre']"
+              placeholder="Nombre">
+            </mat-form-field>
+        </div>
+        <div fxFlex="50"  class="pr-16">
+            <mat-form-field class="full-width">
+              <input
+              matInput              
+              name="descripcion"
+              [formControl]="itemForm.controls['descripcion']"
+              placeholder="Descripción">
+            </mat-form-field>
+        </div>
+        <div fxFlex="100" class="mt-16">
+            <button mat-raised-button color="primary" [disabled]="itemForm.invalid">{{"SAVE" | translate }}</button>
+            <span fxFlex></span>
+            <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancel</button>
+        </div>
+    </div>    
+</form>
+

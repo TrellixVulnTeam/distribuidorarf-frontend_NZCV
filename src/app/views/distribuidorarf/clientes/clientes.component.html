@@ -1,0 +1,89 @@
+<mat-card class="p-0" [@animate]="{value:'*',params:{y:'50px',delay:'300ms'}}">
+    <div class="m-333">
+      <button mat-raised-button class="mb-8" color="primary" (click)="openPopUp({}, true)" style="margin-right: 1%;"><mat-icon>assignment_ind</mat-icon></button>      
+      <button mat-raised-button class="mb-8" color="accent" (click)="exportexcel()"><mat-icon>vertical_align_bottom</mat-icon></button>            
+      <mat-form-field class="margin-333" style="width: 50%;float: right;">
+        <input 
+        matInput 
+        placeholder="Filtrar" 
+        value=""
+        (keyup)='updateFilter($event)'>
+      </mat-form-field>
+    </div>        
+    <div style="clear: both;"></div>
+    <mat-card-content class="p-0">            
+      <ngx-datatable      
+            class="material ml-0 mr-0"
+            [rows]="items"
+            [columnMode]="'force'"
+            [headerHeight]="50"
+            [footerHeight]="50"
+            [scrollbarH]="true"
+            [limit]="10"
+            [rowHeight]="50">
+            <ngx-datatable-column name="ID" [flexGrow]="1">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.identificacion }}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Nombre" [flexGrow]="1">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.nombre }}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Apellidos" [flexGrow]="1">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.apellidos }}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Teléfono" [flexGrow]="1">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.telefono1 }}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Crédito" [flexGrow]="1">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.maxCredito }}
+              </ng-template>                
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Estado" [flexGrow]="1">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <mat-chip mat-sm-chip [color]="'primary'" [selected]="row.estaActivo">{{row.estaActivo ? 'activo' : 'inactivo'}}</mat-chip>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Acciones" [flexGrow]="1">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <button mat-icon-button mat-sm-button color="primary" class="mr-16" (click)="openPopUp(row)"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button mat-sm-button color="warn" (click)="deleteItem(row)"><mat-icon>delete</mat-icon></button>
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>          
+    </mat-card-content>    
+</mat-card>
+<!-- style="display: none;" -->
+<table id="excel-table" style="display: none;">
+  <tr>
+    <th>Identificación</th>
+    <th>Nombre</th>
+    <th>Apellidos</th>
+    <th>Teléfono1</th>
+    <th>Teléfono2</th>
+    <th>Dirección</th>
+    <th>Correo Electrónico</th>
+    <th>Max Crédito</th>
+    <th>Término</th>
+    <th>Comentarios</th>
+  </tr>
+  <tr *ngFor="let item of items">
+    <td>{{item.identificacion}}</td>
+    <td>{{item.nombre}}</td>
+    <td>{{item.apellidos}}</td>
+    <td>{{item.telefono1}}</td>
+    <td>{{item.telefono2}}</td>
+    <td>{{item.direccion}}</td>
+    <td>{{item.correoElectronico}}</td>
+    <td>{{item.maxCredito}}</td>
+    <td>{{item.termino.nombre}}</td>
+    <td>{{item.comentarios}}</td>
+  </tr>
+</table>

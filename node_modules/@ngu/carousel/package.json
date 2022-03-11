@@ -1,0 +1,32 @@
+{
+  "name": "@ngu/carousel",
+  "version": "3.0.2",
+  "peerDependencies": {
+    "@angular/common": "^10.0.4",
+    "@angular/core": "^10.0.4"
+  },
+  "dependencies": {
+    "tslib": "^2.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uiuniversal/ngu-carousel.git"
+  },
+  "keywords": [
+    "angular",
+    "carousel",
+    "universal",
+    "angular universal",
+    "universal carousel",
+    "ngu carousel"
+  ],
+  "main": "bundles/ngu-carousel.umd.js",
+  "module": "fesm2015/ngu-carousel.js",
+  "es2015": "fesm2015/ngu-carousel.js",
+  "esm2015": "esm2015/ngu-carousel.js",
+  "fesm2015": "fesm2015/ngu-carousel.js",
+  "typings": "ngu-carousel.d.ts",
+  "metadata": "ngu-carousel.metadata.json",
+  "sideEffects": false
+}
