@@ -15,6 +15,7 @@ import { ProveedoresService } from 'app/services/proveedores.service';
 import { ProvinciasService } from 'app/services/provincias.service';
 import { TiposIdentificacionService } from 'app/services/tipos-identificacion.service';
 import { UserApiService } from 'app/services/user-api.service';
+import { CustomValidators } from 'ngx-custom-validators';
 
 declare const google: any;
 declare const $: any;
@@ -53,9 +54,7 @@ export class ProveedoresPopupComponent implements OnInit {
 		  lng: this.mapCenter.lng,
 		  draggable: true
 	  }
-  ]
-
-  tiposIdentificacion: TipoIdentificacion[] = [];
+  ]  
 
   token: Token = {
     access_token: ``
@@ -66,14 +65,14 @@ export class ProveedoresPopupComponent implements OnInit {
     nombre: null,
     comentarios: null,
     correoElectronico: null,
-    direccion: null,
-    distrito: null,
+    direccion: null,    
     estaActivo: null,
     fechaCreacion: null,
     fechaUltimaModificacion: null,
     latLongDireccion: null,
-    telefono: null,
-    tipoIdentificacion: null,
+    telefono: null,    
+    url: null,
+    otrasSenas: null
   }
 
   provincias: Provincia[] = [];
@@ -148,19 +147,10 @@ export class ProveedoresPopupComponent implements OnInit {
     });
     this.userApiService.login().subscribe(
       res => {
-        this.token = res;
-        this.cargarProvincias();
-        this.cargarTiposIdentificacion();
+        this.token = res;        
         if(this.data.payload.identificacion != '' && this.data.payload.identificacion != null){      
           this.esEditar = true;
-          console.log(this.data.payload.tipoIdentificacion.idTipoIdetificacion);
-          this.proveedorDTO.tipoIdentificacion = this.data.payload.tipoIdentificacion.idTipoIdetificacion;
-          this.codProvincia = this.data.payload.distrito.provincia;
-          this.cambiaSeleccionProvincia(this.codProvincia);
-          this.idCanton = this.data.payload.distrito.canton.idCanton;
-          this.cambiaSeleccionCanton(this.idCanton);                      
-          this.codDistrito = this.data.payload.distrito.codDistrito;              
-          this.cambiaSeleccionDistrito(this.codDistrito);  
+          // console.log(this.data.payload.tipoIdentificacion.idTipoIdetificacion);                    
           
           this.mapCenter.lat = this.data.payload.latLongDireccion.split(',')[0];
           this.mapCenter.lng = this.data.payload.latLongDireccion.split(',')[1];
@@ -180,30 +170,20 @@ export class ProveedoresPopupComponent implements OnInit {
 
   buildItemForm(item) {
     this.itemForm = this.fb.group({      
-      identificacion: [item.identificacion || '', Validators.required],
+      identificacion: [item.identificacion || -1],
       nombre: [item.nombre || '', Validators.required],      
       telefono: [item.telefono || ''],
       correoElectronico: [item.correoElectronico || '', [Validators.required, Validators.email]],
       comentarios: [item.comentarios || ''],       
-      estaActivo: [item.estaActivo || false]      
+      estaActivo: [item.estaActivo || false],
+      url: [item.url || '', [CustomValidators.url]]
     });
     this.secondFormGroup = this.fb.group({
       direccion: [item.direccion || ''],
       latLongDireccion: [item.latLongDireccion || ''],      
-      googleSearch: ['']
+      googleSearch: [''],
+      otrasSenas: [item.otrasSenas || '']
     });
-  }
-
-  cargarTiposIdentificacion(){     
-    this.tiposIdentificacionService.getAll(this.token.access_token).subscribe(
-      res => {
-        this.tiposIdentificacion = res;                    
-      },
-      err => {
-        console.log(err);
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );    
   }
 
   private setCurrentLocation() {        
@@ -234,56 +214,6 @@ export class ProveedoresPopupComponent implements OnInit {
     });
   }
 
-  cargarProvincias(){  
-    this.provinciasServices.getAll(this.token.access_token).subscribe(
-      res => {
-          this.provincias = res;                             
-      }
-    );    
-  }
-
-  cambiaSeleccionProvincia(idProvincia){            
-    this.provinciasServices.getOne(idProvincia, this.token.access_token).subscribe(
-      res => {            
-        this.provinciaNueva = res;                                      
-        this.cantones = [];
-        this.distritos = [];      
-        // this.distrito.codDistrito = 0;            
-        this.provinciaNueva.cantones.forEach(element => {              
-          this.cantones.push(element);
-        });
-      },
-      err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );      
-  }
-
-  cambiaSeleccionCanton(idCanton){        
-  this.cantonesService.getCanton(idCanton, this.token.access_token).subscribe(
-    res => {
-      this.distritos = [];
-      // this.distrito.codDistrito = 0;
-      this.cantonNuevo = res;
-      this.cantonNuevo.distritos.forEach(element => {
-        this.distritos.push(element);
-      });
-    },
-    err => {
-      console.log(err);
-      this.snack.open(err.message, "ERROR", { duration: 4000 });
-    }
-  );    
-  }
-
-  cambiaSeleccionDistrito(idDistrito){
-  this.proveedorDTO.distrito = idDistrito;    
-  }
-
-  cambiaSeleccionTipoIdentificacion(){
-    this.itemForm.controls['identificacion'].enable();
-  }
-
   markerDragEnd(m: marker, $event: MouseEvent) {
     this.mapCenter.lat = $event.coords.lat;
     this.mapCenter.lng = $event.coords.lng;        
@@ -310,10 +240,12 @@ export class ProveedoresPopupComponent implements OnInit {
     this.proveedorDTO.correoElectronico = this.itemForm.controls.correoElectronico.value;
     this.proveedorDTO.telefono = this.itemForm.controls.telefono.value;
     this.proveedorDTO.estaActivo = this.itemForm.controls.estaActivo.value;
+    this.proveedorDTO.url = this.itemForm.controls.url.value;
 
     this.proveedorDTO.latLongDireccion = this.secondFormGroup.controls.latLongDireccion.value;
-    this.proveedorDTO.direccion = this.secondFormGroup.controls.direccion.value;    
-    this.proveedorDTO.distrito = this.codDistrito;
+    this.proveedorDTO.direccion = this.secondFormGroup.controls.direccion.value;        
+    this.proveedorDTO.otrasSenas = this.secondFormGroup.controls.otrasSenas.value;
+
     console.log(this.proveedorDTO);
     if(this.esEditar){      
       this.proveedoresService.update(this.token.access_token, this.proveedorDTO.identificacion, this.proveedorDTO).subscribe(
@@ -326,7 +258,7 @@ export class ProveedoresPopupComponent implements OnInit {
         }
       );
     }else{
-      this.funcionesService.validaProveedorExiste(this.token.access_token, this.proveedorDTO.identificacion).subscribe(
+      this.funcionesService.validaProveedorExiste(this.token.access_token, this.proveedorDTO.nombre).subscribe(
         res =>{
           this.validaProveedor = res[0];        
           if(this.validaProveedor.proveedorexiste == 0){            

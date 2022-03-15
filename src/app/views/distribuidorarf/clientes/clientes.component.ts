@@ -55,7 +55,8 @@ export class ClientesComponent implements OnInit, OnDestroy {
     termino: null,
     tipoIdentificacion: null,
     tipoPersona: null,
-    usuario: null
+    usuario: null,
+    otrasSenas: null
   }
 
   columns = [{ prop: 'nombre' }, { name: 'ID' }, { name: 'apellidos' }, { name: 'maxCredito' }];

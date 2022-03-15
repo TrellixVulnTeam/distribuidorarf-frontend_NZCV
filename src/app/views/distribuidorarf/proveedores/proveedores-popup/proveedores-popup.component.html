@@ -7,32 +7,18 @@
                 <div fxLayout="row wrap">
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
                         <mat-slide-toggle [formControl]="itemForm.controls['estaActivo']">{{'ACTIVO' | translate}}</mat-slide-toggle>                                       
-                    </div>
-                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
-                        <mat-form-field style="width: 100%;">
-                            <mat-select placeholder="{{'TIPOIDENTIFICACION' | translate}}" name="tipoIdentificacion" [(ngModel)]="proveedorDTO.tipoIdentificacion" [ngModelOptions]="{standalone: true}" #myIdentType>
-                            <mat-option *ngFor="let tipoIdent of tiposIdentificacion" [value]="tipoIdent.idTipoIdetificacion">
-                                {{ tipoIdent.descripcion }}
-                            </mat-option>
-                            </mat-select>
-                        </mat-form-field>
-                    </div>
-                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
-                        <mat-form-field style="width: 100%;">
-                          <input matInput placeholder="{{'IDENTIFICACION' | translate}}" formControlName="identificacion" required type="number">
-                        </mat-form-field>                    
-                    </div>
-                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                    </div>                                        
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
                           <input matInput placeholder="{{'NOMBRE' | translate}}" formControlName="nombre" required>
                         </mat-form-field>                    
                     </div>
-                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">                
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">                
                         <mat-form-field style="width: 100%;">
                           <input matInput placeholder="{{'TELEFONO' | translate}}" formControlName="telefono" type="number">
                         </mat-form-field>                        
                     </div>
-                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
                             <input matInput placeholder="{{'CORREOELECTRONICO' | translate}}" formControlName="correoElectronico" name="correoElectronico" type="email" value="" required>                  
                         </mat-form-field>                        
@@ -44,10 +30,23 @@
                             class="form-error-msg"> Correo electrónico inválido 
                         </small>                  
                     </div>
-                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
                             <input matInput placeholder="{{'COMENTARIOS' | translate}}" formControlName="comentarios">
                         </mat-form-field>                   
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'URL' | translate}}" 
+                                   formControlName="url"                                   
+                            >
+                        </mat-form-field>               
+                        <small
+                            *ngIf="itemForm.controls['url'].hasError('url') && itemForm.controls['url'].touched"
+                            class="form-error-msg" 
+                        >
+                        {{'URL_INVALIDO' | translate}}
+                        </small>    
                     </div>
                     <div>
                         <button mat-raised-button matStepperNext color="primary" [disabled]="itemForm.invalid">{{'SIGUIENTE' | translate  }}</button>
@@ -59,7 +58,7 @@
             <form [formGroup]="secondFormGroup">
                 <ng-template matStepLabel>{{'DIRECCION' | translate}}</ng-template>
                 <div fxLayout="row wrap">
-                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">                                        
+                    <!-- <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">                                        
                         <mat-form-field style="width: 100%;">
                             <mat-select placeholder="{{'PROVINCIA' | translate}} *" name="provincia" (ngModelChange)="cambiaSeleccionProvincia(selectProvincia.value)" [(ngModel)]="codProvincia" [ngModelOptions]="{standalone: true}" #selectProvincia >
                             <mat-option *ngFor="let pro of provincias" [value]="pro.cod">
@@ -85,10 +84,15 @@
                             </mat-option>
                             </mat-select>                                    
                         </mat-form-field>                               
-                    </div>
+                    </div> -->
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
                         <mat-form-field style="width: 100%;">
                           <input matInput placeholder="{{'DIRECCION' | translate}}" formControlName="direccion">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                          <input matInput placeholder="{{'OTRASSENAS' | translate}}" formControlName="otrasSenas">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16" style="margin-bottom: 1%;">

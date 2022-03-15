@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSidenav } from '@angular/material/sidenav';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Categoria } from 'app/interfaces/categoria';
@@ -12,6 +13,7 @@ import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.serv
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CartItem, ShopService } from '../shop.service';
+import { FormularioProductoComponent } from './formulario-producto/formulario-producto.component';
 
 @Component({
   selector: 'app-productos',
@@ -42,7 +44,8 @@ export class ProductosComponent implements OnInit {
     private snackBar: MatSnackBar,
     private loader: AppLoaderService,
     private userAPIService: UserApiService,
-    private categoriasService: CategoriasService
+    private categoriasService: CategoriasService,
+    private dialog: MatDialog,
   ) { }
 
   ngOnInit() {
@@ -108,4 +111,44 @@ export class ProductosComponent implements OnInit {
   toggleSideNav() {
     this.sideNav.opened = !this.sideNav.opened;
   }
+
+  openPopUp(data: any = {}, isNew?) {
+    let title = isNew ? 'Agragar Cliente' : 'Modificar Cliente';
+    let dialogRef: MatDialogRef<any> = this.dialog.open(FormularioProductoComponent, {
+      width: '1020px',
+      disableClose: true,
+      data: { title: title, payload: data }
+    })
+    dialogRef.afterClosed()
+      .subscribe(res => {
+        if(!res) {
+          // If user press cancel
+          return;
+        }
+        this.loader.open();
+        if (isNew) {
+          // this.personasService.getAll(this.tokenUserApi.access_token).subscribe(
+          //   res => {
+          //     this.items = res;
+          //     this.loader.close();
+          //     this.snack.open("El cliente fue editado con éxito", "ÉXITO", { duration: 4000 });                       
+          //   },
+          //   err => {
+          //     this.snack.open(err.message, "ERROR", { duration: 4000 });
+          //   }
+          // );
+        } else {          
+          // this.personasService.getAll(this.tokenUserApi.access_token).subscribe(
+          //   res => {
+          //     this.items = res;
+          //     this.loader.close();
+          //     this.snack.open("El cliente fue editado con éxito", "ÉXITO", { duration: 4000 });                       
+          //   },
+          //   err => {
+          //     this.snack.open(err.message, "ERROR", { duration: 4000 });
+          //   }
+          // );          
+        }
+      })
+  }  
 }

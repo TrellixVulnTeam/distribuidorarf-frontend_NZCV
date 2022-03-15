@@ -106,14 +106,6 @@ export class DetalleProductoComponent implements OnInit {
       p.state = '0';
       return p;
     })
-  }
-
-  public uploader: FileUploader = new FileUploader({ url: 'https://evening-anchorage-315.herokuapp.com/api/' });
-  public hasBaseDropZoneOver: boolean = false;
-  console = console;
-
-  public fileOverBase(e: any): void {
-    this.hasBaseDropZoneOver = e;
-  }
+  }  
 
 }

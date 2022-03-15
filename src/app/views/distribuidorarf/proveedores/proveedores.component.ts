@@ -29,16 +29,16 @@ export class ProveedoresComponent implements OnInit {
   proveedorDTO: ProveedorDto = {
     identificacion: null,
     nombre: null,
-    telefono: null,
-    tipoIdentificacion: null,
+    telefono: null,    
     correoElectronico: null,
     direccion: null,
     comentarios: null,
     fechaCreacion: null,
     fechaUltimaModificacion: null,
     estaActivo: null,
-    latLongDireccion: null,
-    distrito: null
+    latLongDireccion: null,    
+    url: null,
+    otrasSenas: null
   }
 
   columns = [{ prop: 'nombre' }, { name: 'ID' }, { name: 'correoElectronico' }, { name: 'telefono' }];

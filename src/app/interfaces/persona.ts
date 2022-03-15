@@ -17,6 +17,7 @@ export interface Persona {
     fechaCumpleannos: Date    
     estaActivo: boolean;    
     codigoAutorizacion: string;
+    otrasSenas: string;
 
     // -------------- Cliente --------------
     //Waze o google maps si tiene, es la url que se guarda

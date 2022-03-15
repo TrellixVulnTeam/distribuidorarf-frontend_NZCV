@@ -1,6 +1,5 @@
 export interface ProveedorDto {
-    identificacion: string;
-    tipoIdentificacion: number;
+    identificacion: number;    
     nombre: string;
     telefono: string;
     correoElectronico: string;
@@ -10,7 +9,7 @@ export interface ProveedorDto {
     fechaUltimaModificacion: Date;
     estaActivo: boolean;
     latLongDireccion: string;
-    
-    // -- Relaciones --
-    distrito: number;
+    url: string;
+    otrasSenas: string;
+        
 }

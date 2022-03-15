@@ -74,7 +74,7 @@
             <!-- <button mat-raised-button color="primary" routerLink="/shop/cart">
               <mat-icon>shopping_cart</mat-icon> Cart ({{cartData.itemCount}})
             </button> -->
-            <button mat-raised-button color="primary" routerLink="/shop/cart">
+            <button mat-raised-button color="primary" (click)="openPopUp({}, true)">
               <mat-icon>queue_play_next</mat-icon> Agregar Producto
             </button>
           </div>

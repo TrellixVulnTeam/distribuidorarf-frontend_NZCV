@@ -3,8 +3,7 @@ import { Producto } from "./producto";
 import { TipoIdentificacion } from "./tipo-identificacion";
 
 export interface Proveedor {
-    identificacion: string;
-    tipoIdentificacion: TipoIdentificacion;
+    identificacion: number;
     nombre: string;
     telefono: string;
     correoElectronico: string;
@@ -14,8 +13,9 @@ export interface Proveedor {
     fechaUltimaModificacion: Date;
     estaActivo: boolean;
     latLongDireccion: string;
+    url: string;
+    otrasSenas: string;
     
-    // -- Relaciones --
-    distrito: Distrito;
+    // -- Relaciones --    
     productos: Producto[];
 }

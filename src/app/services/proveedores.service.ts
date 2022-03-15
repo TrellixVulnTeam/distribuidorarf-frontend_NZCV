@@ -21,7 +21,7 @@ export class ProveedoresService {
     return this.http.get<Proveedor[]>(`${this.BASE_URL}/${this.entity}`,{headers: heads});
   }
 
-  getOne(token: string, identificacion: string): Observable<Proveedor>{
+  getOne(token: string, identificacion: number): Observable<Proveedor>{
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
     return this.http.get<Proveedor>(`${this.BASE_URL}/${this.entity}/${identificacion}`,{headers: heads});
   }
@@ -31,12 +31,12 @@ export class ProveedoresService {
     return this.http.post<Proveedor>(`${this.BASE_URL}/${this.entity}`, proveedorDTO,{headers: heads});
   }
 
-  update(token: string, identificacion: string, proveedorDTO: ProveedorDto): Observable<Proveedor>{
+  update(token: string, identificacion: number, proveedorDTO: ProveedorDto): Observable<Proveedor>{
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
     return this.http.put<Proveedor>(`${this.BASE_URL}/${this.entity}/${identificacion}`, proveedorDTO,{headers: heads});
   }
 
-  delete(token: string, identificacion: string){
+  delete(token: string, identificacion: number){
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
     return this.http.delete(`${this.BASE_URL}/${this.entity}/${identificacion}`,{headers: heads});
   }  

@@ -1,0 +1,302 @@
+<mat-card-content>
+    <mat-horizontal-stepper [linear]="isLinear" #stepper>
+        <mat-step [stepControl]="datosInicialesForm">
+            <form [formGroup]="datosInicialesForm">
+                <ng-template matStepLabel>{{'GENERAL' | translate}}</ng-template>
+                <div fxLayout="row wrap">
+                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <mat-select placeholder="{{'CATEGORIA' | translate}} *" name="categoria" [(ngModel)]="productoDTO.categoria" [ngModelOptions]="{standalone: true}" #selectCategoria >
+                              <mat-option *ngFor="let categoria of categorias" [value]="categoria.idCategoria">
+                                {{ categoria.nombre }}
+                              </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <mat-select placeholder="{{'PROVIDER' | translate}} *" name="proveedor" [(ngModel)]="productoDTO.proveedor" [ngModelOptions]="{standalone: true}" #selectProveedor >
+                              <mat-option *ngFor="let proveedor of proveedores" [value]="proveedor.identificacion">
+                                {{ proveedor.nombre }}
+                              </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <mat-select placeholder="{{'BRANCH' | translate}} *" name="proveedor" [(ngModel)]="productoDTO.marca" [ngModelOptions]="{standalone: true}" #selectMarca >
+                              <mat-option *ngFor="let marca of marcas" [value]="marca.idMarca">
+                                {{ marca.nombre }}
+                              </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'CODE' | translate}} *" formControlName="idProducto" type="text">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'CODEUSA' | translate}} *" formControlName="codigoExterno" type="text">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'NOMBRE' | translate}} *" formControlName="nombre" type="text">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'CANTIDADEXISTENCIAS' | translate}}" formControlName="cantidadExistencias" type="number" readonly>
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <textarea matInput placeholder="{{'DESCRIPTION' | translate}}" formControlName="descripcion" type="text"></textarea>
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div>
+                    <span fxFlex></span>
+                    <button mat-raised-button matStepperNext color="primary">{{'SIGUIENTE' | translate}}</button>
+                </div>
+            </form>
+        </mat-step>
+        <mat-step [stepControl]="preciosForm">
+            <form [formGroup]="preciosForm">
+                <ng-template matStepLabel>{{'PRECIOS' | translate}}</ng-template>
+                <div fxLayout="row wrap">
+                    <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                        <mat-slide-toggle [formControl]="preciosForm.controls['esLiquidacion']">{{'LIQUIDACION' | translate}}</mat-slide-toggle>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo" type="number">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
+                        <label>{{'PRECIO' | translate}} 1</label>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo1" type="number" readonly>
+                        </mat-form-field>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'UTILIDAD' | translate}}" formControlName="utilidad1" type="number">
+                        </mat-form-field>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta1" type="number">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
+                        <label>{{'PRECIO' | translate}} 2</label>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo2" type="number" readonly>
+                        </mat-form-field>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'UTILIDAD' | translate}}" formControlName="utilidad2" type="number">
+                        </mat-form-field>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta2" type="number">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
+                        <label>{{'PRECIO' | translate}} 3</label>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo3" type="number" readonly>
+                        </mat-form-field>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'UTILIDAD' | translate}}" formControlName="utilidad3" type="number">
+                        </mat-form-field>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta3" type="number">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
+                        <label>{{'PRECIO' | translate}} 4</label>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo4" type="number" readonly>
+                        </mat-form-field>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'UTILIDAD' | translate}}" formControlName="utilidad4" type="number">
+                        </mat-form-field>
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta4" type="number">
+                        </mat-form-field>
+                    </div>
+                </div>
+                <div>
+                    <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">{{'ATRAS' | translate}}</button>
+                    <span fxFlex></span>
+                    <button mat-raised-button matStepperNext color="primary">{{'SIGUIENTE' | translate}}</button>
+                </div>
+            </form>
+        </mat-step>
+        <mat-step [stepControl]="detallesForm">
+            <form [formGroup]="detallesForm">
+                <ng-template matStepLabel>{{'DETALLE' | translate}}</ng-template>
+                <div fxLayout="row wrap">
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'TALLA' | translate}}" formControlName="talla" type="text" onkeyup="this.value = this.value.toUpperCase();">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'CANTIDAD' | translate}}" formControlName="cantidad" type="number">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'COLORNOMBRE' | translate}}" formControlName="colorNombre" type="text">
+                        </mat-form-field>
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
+                        <input [(colorPicker)]="color" [style.background]="color" style="
+                                text-align: center;
+                                z-index: 100;
+                                height: 32px;
+                                width: 32px;
+                                border-radius: 20%;
+                                justify-content: center;
+                                align-items: center;
+                                border-style: none"
+                        />
+                    </div>
+                    <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
+                        <button mat-raised-button color="primary" style="float: right;" (click)="agregarDetalle()">{{'ADD' | translate}}</button>
+                    </div>
+                    <div style="clear: both;"></div>
+                    <div style="width: 100%;">
+                        <mat-card class="default">
+                            <mat-card-title style="align-items: center;">
+                                Detalles del producto
+                            </mat-card-title>
+                            <mat-card-content class="p-0">
+                                <mat-list class="compact-list mb-16" style="max-height: 200px; overflow-y: auto">
+                                    <mat-list-item class="" *ngFor="let item of items">
+                                        <div fxLayout="row" fxFlex="100">
+                                            <h6>{{item.talla}}</h6>
+                                            <span fxFlex></span>
+                                            <h6>{{item.cantidad}}</h6>
+                                            <span fxFlex></span>
+                                            <h6>{{item.nombreColor}}</h6>
+                                            <span fxFlex></span>
+                                                <span [style.background]="item.color" style="
+                                                    text-align: center;
+                                                    z-index: 100;
+                                                    height: 32px;
+                                                    width: 32px;
+                                                    border-radius: 20%;
+                                                    justify-content: center;
+                                                    align-items: center;
+                                                    border-style: none"></span>
+                                            <span fxFlex></span>
+                                            <div [style.display]="item.id==-1 ? 'block' : 'none'">
+                                                <h6>Acciones</h6>
+                                            </div>
+                                            <div [style.display]="item.id==-1 ? 'none' : 'block'">
+                                                <button mat-icon-button mat-sm-button color="warn" (click)="deleteItem(row)"><mat-icon>delete</mat-icon></button>
+                                                <button mat-icon-button mat-sm-button color="primary" class="mr-16" (click)="openPopUp(row)"><mat-icon>edit</mat-icon></button>
+                                            </div>
+                                        </div>
+                                    </mat-list-item>
+                                </mat-list>
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
+                </div>
+                <div>
+                    <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">{{'ATRAS' | translate}}</button>
+                    <span fxFlex></span>
+                    <button mat-raised-button matStepperNext color="primary">{{'SIGUIENTE' | translate}}</button>
+                </div>
+                <mat-step [stepControl]="detallesForm">
+                    <form [formGroup]="detallesForm">
+                        <ng-template matStepLabel>{{'IMAGENES' | translate}}</ng-template>
+                        <input type="file" ng2FileSelect [uploader]="uploader" style="margin-bottom: 2%;"/>
+                        <div class="mb-16" style="margin-right: 1%;">
+                            <div ng2FileDrop
+                            [ngClass]="{'dz-file-over': hasBaseDropZoneOver}"
+                            (fileOver)="fileOverBase($event)"
+                            [uploader]="uploader"
+                            class="fileupload-drop-zone mb-24">
+                                Drop file here
+                            </div>
+                        </div>
+                        <table class="default-table mat-box-shadow mb-24" style="width: 99%;">
+                            <thead>
+                            <tr>
+                                <th width="30%">Name</th>
+                                <th>Size</th>
+                                <th>Progress</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody *ngIf="uploader.queue.length; else tableNoData">
+                            <tr *ngFor="let item of uploader.queue">
+                                <td>{{ item?.file?.name }}</td>
+                                <td nowrap>{{ item?.file?.size/1024/1024 | number:'.2' }} MB</td>
+                                <td>
+                                    <div class="progress" style="margin-bottom: 0;">
+                                        <div class="progress-bar" role="progressbar" [ngStyle]="{ 'width': item.progress + '%' }"></div>
+                                        <mat-progress-bar
+                                        class=""
+                                        color="primary"
+                                        mode="determinate"
+                                        [value]="item.progress">
+                                        </mat-progress-bar>
+                                    </div>
+                                </td>
+                                <td class="">
+                                    <mat-icon *ngIf="item.isSuccess" color="primary">check</mat-icon>
+                                    <mat-icon *ngIf="item.isCancel" color="accent">cancel</mat-icon>
+                                    <mat-icon *ngIf="item.isError" color="warn">error</mat-icon>
+                                </td>
+                                <td nowrap>
+                                    <button
+                                    mat-raised-button
+                                    color="primary"
+                                    class="mx-4"
+                                    (click)="item.upload()"
+                                    [disabled]="item.isReady || item.isUploading || item.isSuccess">Upload</button>
+                                    <button
+                                    mat-raised-button
+                                    color="accent"
+                                    class="mx-4"
+                                    (click)="item.cancel()"
+                                    [disabled]="!item.isUploading">Cancel</button>
+
+                                    <button
+                                    mat-raised-button
+                                    color="warn"
+                                    class="mx-4"
+                                    (click)="item.remove()">Remove</button>
+                                </td>
+                            </tr>
+                            </tbody>
+                            <ng-template #tableNoData>
+                            <p [ngStyle]="{padding: '0 1.2rem'}">Queue is empty</p>
+                            </ng-template>
+                        </table>
+                        <div>
+                            <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">{{'ATRAS' | translate}}</button>
+                            <!-- <span fxFlex></span>
+                            <button mat-raised-button matStepperNext color="primary">{{'SIGUIENTE' | translate}}</button> -->
+                        </div>
+                    </form>
+                </mat-step>
+            </form>
+        </mat-step>
+    </mat-horizontal-stepper>
+</mat-card-content>
+<div style="clear: both;"></div>
+<div>
+  <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancel</button>
+  <span fxFlex></span>
+  <!-- (click)="submit()" -->
+  <button mat-raised-button color="primary" [disabled]="datosInicialesForm.invalid" >{{"SAVE" | translate }}</button>
+</div>

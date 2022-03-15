@@ -92,6 +92,7 @@ export class CategoriaPopupComponent implements OnInit {
     if(this.categoriaDTO.idCategoriaPadre == -1){
       this.categoriaDTO.idCategoriaPadre = null;
     }
+    console.log(this.categoriaDTO.idCategoriaPadre);
     if(this.esEditar){
       this.categoriasService.update(this.token.access_token, this.categoriaDTO.idCategoria, this.categoriaDTO).subscribe(
         res => {

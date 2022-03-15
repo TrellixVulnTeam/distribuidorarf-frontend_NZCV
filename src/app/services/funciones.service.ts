@@ -19,8 +19,8 @@ export class FuncionesService {
     return this.http.get<number>(`${this.BASE_URL}/${this.entity}/clienteExiste/${identifiacion}`,{headers: heads});
   }
 
-  validaProveedorExiste(token: string, identifiacion: string): Observable<number>{            
+  validaProveedorExiste(token: string, nombre: string): Observable<number>{            
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
-    return this.http.get<number>(`${this.BASE_URL}/${this.entity}/proveedorExiste/${identifiacion}`,{headers: heads});
+    return this.http.get<number>(`${this.BASE_URL}/${this.entity}/proveedorExiste/${nombre}`,{headers: heads});
   }
 }

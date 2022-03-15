@@ -59,7 +59,7 @@
                   name="fechaCumpleanos"
                   formControlName="fechaCumpleanos"
                   placeholder="Fecha de Cumpleaños" 
-                  [matDatepicker]="appDatepicker"
+                  [matDatepicker]="appDatepicker"                  
                   required>
                   
                 <mat-datepicker-toggle matSuffix [for]="appDatepicker"></mat-datepicker-toggle>
@@ -76,7 +76,7 @@
           <form [formGroup]="secondFormGroup">
             <ng-template matStepLabel>{{'DIRECCION' | translate}}</ng-template>
             <div fxLayout="row wrap">
-              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">                                        
+              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
                 <mat-form-field style="width: 100%;">
                   <mat-select placeholder="{{'PROVINCIA' | translate}} *" name="provincia" (ngModelChange)="cambiaSeleccionProvincia(selectProvincia.value)" [(ngModel)]="provincia.cod" [ngModelOptions]="{standalone: true}" #selectProvincia >
                     <mat-option *ngFor="let pro of provincias" [value]="pro.cod">
@@ -125,6 +125,11 @@
               <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                 <mat-form-field style="width: 100%;">
                   <input matInput placeholder="{{'DIRECCION' | translate}}" formControlName="direccion">
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'OTRASSENAS' | translate}}" formControlName="otrasSenas">
                 </mat-form-field>
               </div>
               <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16" style="margin-bottom: 1%;">

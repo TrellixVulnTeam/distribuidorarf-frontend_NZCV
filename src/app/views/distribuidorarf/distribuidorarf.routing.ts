@@ -3,6 +3,7 @@ import { CategoriasComponent } from './categorias/categorias.component';
 import { ClientesComponent } from './clientes/clientes.component';
 import { MarcasComponent } from './marcas/marcas.component';
 import { DetalleProductoComponent } from './productos/detalle-producto/detalle-producto.component';
+import { FormularioProductoComponent } from './productos/formulario-producto/formulario-producto.component';
 import { ProductosComponent } from './productos/productos.component';
 import { ProveedoresComponent } from './proveedores/proveedores.component';
 
@@ -24,6 +25,16 @@ export const DistribuidorarfRoutes: Routes = [
         path: 'products/:id',
         component: DetalleProductoComponent,
         data: { title: 'Detail', breadcrumb: 'Detail' }
+      },
+      {
+        path: 'product-form',
+        component: FormularioProductoComponent,
+        data: { title: 'Product-Form', breadcrumb: 'Product-Form' }
+      },
+      {
+        path: 'product-form/:id',
+        component: FormularioProductoComponent,
+        data: { title: 'Product-Form', breadcrumb: 'Product-Form' }
       },
       {
         path: 'branches',

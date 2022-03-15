@@ -1,6 +1,7 @@
 import { MapsAPILoader, MouseEvent } from '@agm/core';
 import { Component, ElementRef, Inject, NgZone, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { MAT_DATE_FORMATS } from '@angular/material/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Canton } from 'app/interfaces/canton';
@@ -24,13 +25,28 @@ import { TiposPersonaService } from 'app/services/tipos-persona.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { environment } from 'environments/environment';
 
+export const MY_DATE_FORMATS = {
+  parse: {
+    dateInput: 'DD/MM/YYYY',
+  },
+  display: {
+    dateInput: 'DD/MM/YYYY',
+    monthYearLabel: 'MMMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY'
+  },
+};
+
 declare const google: any;
 declare const $: any;
 
 @Component({
   selector: 'app-cliente-popup',
   templateUrl: './cliente-popup.component.html',
-  styleUrls: ['./cliente-popup.component.scss']
+  styleUrls: ['./cliente-popup.component.scss'],
+  providers: [
+    { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS }
+  ]
 })
 export class ClientePopupComponent implements OnInit {
   public itemForm: FormGroup;
@@ -90,7 +106,8 @@ export class ClientePopupComponent implements OnInit {
     termino: null,
     tipoIdentificacion: null,
     tipoPersona: null,
-    usuario: null
+    usuario: null,
+    otrasSenas: null
   }
 
   personaDTO: PersonaDto = {
@@ -117,7 +134,8 @@ export class ClientePopupComponent implements OnInit {
     termino: null,
     tipoIdentificacion: null,
     tipoPersona: null,
-    usuario: null
+    usuario: null,
+    otrasSenas: null
   }
 
   provinciaNueva: Provincia = {
@@ -272,14 +290,15 @@ export class ClientePopupComponent implements OnInit {
       fechaCumpleannos: [item.fechaCumpleannos || ''],
       codigoAutorizacion: [item.codigoAutorizacion || ''],
       estaActivo: [item.estaActivo || false],
-      fechaCumpleanos: [item.fechaCumpleannos || '', [Validators.required]],      
+      fechaCumpleanos: [item.fechaCumpleannos || '', [Validators.required]]      
     });
     this.secondFormGroup = this.fb.group({
       direccion: [item.direccion || ''],
       latLongDireccion: [item.latLongDireccion || ''],
       maxCredito: [item.maxCredito || 0],
       saldoFavor: [item.saldoFavor || 0],
-      googleSearch: ['']
+      googleSearch: [''],
+      otrasSenas: [item.otrasSenas || ''] 
     });
     this.thirdFormGroup = this.fb.group({
       telefonoRef: [item.telefonoRef || ''],
@@ -456,6 +475,9 @@ export class ClientePopupComponent implements OnInit {
     this.personaDTO.telefonoRef = this.thirdFormGroup.controls.telefonoRef.value;
     this.personaDTO.contactoRef = this.thirdFormGroup.controls.contactoRef.value;
     this.personaDTO.termino = this.termino.idTermino;
+    this.personaDTO.otrasSenas = this.secondFormGroup.controls.otrasSenas.value; 
+
+    // console.log(this.itemForm.controls.otrasSenas.value);
 
     if(this.esEditar){
       this.personasService.update(this.tokenUserApi.access_token, this.personaDTO.identificacion, this.personaDTO).subscribe(

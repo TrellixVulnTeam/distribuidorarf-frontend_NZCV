@@ -39,6 +39,8 @@ import { ShopService } from './shop.service';
 import { StarRatingModule } from 'angular-star-rating';
 import { DetalleProductoComponent } from './productos/detalle-producto/detalle-producto.component';
 import { FileUploadModule } from 'ng2-file-upload';
+import { FormularioProductoComponent } from './productos/formulario-producto/formulario-producto.component';
+import { ColorPickerModule } from 'ngx-color-picker';
 
 
 
@@ -53,10 +55,12 @@ import { FileUploadModule } from 'ng2-file-upload';
     MarcaPopupComponent,
     ProveedoresComponent,
     ProveedoresPopupComponent,
-    DetalleProductoComponent,        
+    DetalleProductoComponent,
+    FormularioProductoComponent,            
   ],
   imports: [
     CommonModule,
+    ColorPickerModule,
     RouterModule.forChild(DistribuidorarfRoutes),
     ReactiveFormsModule,
     FlexLayoutModule,

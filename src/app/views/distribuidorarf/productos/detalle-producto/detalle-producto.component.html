@@ -6,73 +6,7 @@
       <!-- <button mat-raised-button color="primary" routerLink="/shop/cart">
         <mat-icon>shopping_cart</mat-icon> Cart ({{cartData?.itemCount}})</button> -->
     </div>
-    <div fxFlex.lt-md="auto" fxFlex="50" class="product-photos-wrap">
-        <input type="file" ng2FileSelect [uploader]="uploader" style="margin-bottom: 2%;"/>        
-        <div class="mb-16" style="margin-right: 1%;">
-            <div ng2FileDrop
-            [ngClass]="{'dz-file-over': hasBaseDropZoneOver}"
-            (fileOver)="fileOverBase($event)"
-            [uploader]="uploader"
-            class="fileupload-drop-zone mb-24">
-                Drop file here
-            </div>
-        </div>
-        <table class="default-table mat-box-shadow mb-24" style="width: 99%;">
-            <thead>
-            <tr>
-                <th width="30%">Name</th>
-                <th>Size</th>
-                <th>Progress</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody *ngIf="uploader.queue.length; else tableNoData">
-            <tr *ngFor="let item of uploader.queue">
-                <td>{{ item?.file?.name }}</td>
-                <td nowrap>{{ item?.file?.size/1024/1024 | number:'.2' }} MB</td>
-                <td>
-                    <div class="progress" style="margin-bottom: 0;">
-                        <div class="progress-bar" role="progressbar" [ngStyle]="{ 'width': item.progress + '%' }"></div>
-                        <mat-progress-bar
-                          class=""
-                          color="primary"
-                          mode="determinate"
-                          [value]="item.progress">
-                        </mat-progress-bar>
-                    </div>
-                </td>
-                <td class="">
-                    <mat-icon *ngIf="item.isSuccess" color="primary">check</mat-icon>
-                    <mat-icon *ngIf="item.isCancel" color="accent">cancel</mat-icon>
-                    <mat-icon *ngIf="item.isError" color="warn">error</mat-icon>
-                </td>
-                <td nowrap>
-                    <button 
-                    mat-raised-button
-                    color="primary"
-                    class="mx-4"
-                    (click)="item.upload()"
-                    [disabled]="item.isReady || item.isUploading || item.isSuccess">Upload</button>
-                    <button 
-                    mat-raised-button
-                    color="accent"
-                    class="mx-4"
-                    (click)="item.cancel()"
-                    [disabled]="!item.isUploading">Cancel</button>
-    
-                    <button 
-                    mat-raised-button
-                    color="warn"
-                    class="mx-4"
-                    (click)="item.remove()">Remove</button>
-                </td>
-            </tr>
-            </tbody>
-            <ng-template #tableNoData>
-              <p [ngStyle]="{padding: '0 1.2rem'}">Queue is empty</p>
-            </ng-template>
-          </table>
+    <div fxFlex.lt-md="auto" fxFlex="50" class="product-photos-wrap">        
       <div class="gallery-thumbnails" [@animate]="{value:'*',params:{delay: '100ms', x:'-100px'}}">
         <img class="mat-elevation-z1" [ngClass]="{'active': image.state === '1'}" *ngFor="let image of photoGallery" [src]="image.url"
           (click)="changeState(image)">
