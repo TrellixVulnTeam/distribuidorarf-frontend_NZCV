@@ -4,12 +4,15 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSidenav } from '@angular/material/sidenav';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Categoria } from 'app/interfaces/categoria';
+import { GproductoDto } from 'app/interfaces/dto/gproducto-dto';
 import { Token } from 'app/interfaces/token';
 import { CategoriasService } from 'app/services/categorias.service';
+import { GaleriaProductosService } from 'app/services/galeria-productos.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { egretAnimations } from 'app/shared/animations/egret-animations';
 import { Product } from 'app/shared/models/product.model';
 import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
+import { environment } from 'environments/environment';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CartItem, ShopService } from '../shop.service';
@@ -38,6 +41,8 @@ export class ProductosComponent implements OnInit {
     access_token: null
   }
 
+  gProductos: GproductoDto[] = []; 
+
   constructor(
     private shopService: ShopService,
     private fb: FormBuilder,
@@ -45,7 +50,7 @@ export class ProductosComponent implements OnInit {
     private loader: AppLoaderService,
     private userAPIService: UserApiService,
     private categoriasService: CategoriasService,
-    private dialog: MatDialog,
+    private dialog: MatDialog
   ) { }
 
   ngOnInit() {
@@ -62,9 +67,12 @@ export class ProductosComponent implements OnInit {
       .pipe(
         map(products => {
           this.loader.close();
+          console.log("filtro");
+          console.log(products);
           return products;
         })
-      );
+      );      
+
     this.getCart();
     this.cartData = this.shopService.cartData;
   }
@@ -105,6 +113,7 @@ export class ProductosComponent implements OnInit {
   }
   setActiveCategory(category) {
     this.activeCategory = category;
+    console.log(this.activeCategory);
     this.filterForm.controls['category'].setValue(category)
   }
 

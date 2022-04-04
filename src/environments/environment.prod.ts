@@ -16,6 +16,13 @@ export const environment = {
   SERVICE_PERSONAS: "personas",
   SERVICE_CATEGORIAS: "categorias",
   SERVICE_MARCAS: "marcas",
-  SERVICE_PRODUCTOS: "productos",
-  SERVICE_PROVEEDORES: "proveedores"
+  SERVICE_PRODUCTOS: 'productos',
+  SERVICE_PROVEEDORES: "proveedores",
+  SERVICE_PRECIOS_PRODUCTO: "precios-productos",
+  SERVICE_DETALLES_PRODUCTO: "detalles-productos",
+  SERVICE_IMAGENES_PRODUCTO: "imagenes-prducto",
+  AZURESASTOKEN: 'sp=racwdli&st=2022-03-17T18:40:05Z&se=2032-03-18T02:40:05Z&spr=https&sv=2020-08-04&sr=c&sig=W%2BVCKSAuPdyhMIwfn2hl0tQeP9hz2ToZd%2F%2BeJZqsufk%3D',
+  AZUREACCOUNTNAME: 'distribuidorarf',
+  AZURECONTAINERNAME: 'productos',
+  SERVICE_GALERIA_PRODUCTO: "galeria-productos"
 };

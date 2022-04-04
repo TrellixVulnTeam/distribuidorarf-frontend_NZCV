@@ -1,5 +1,5 @@
 export interface ProductoDto {
-    idProducto: number;
+    idProducto: string;
     codigoExterno: string;
     nombre: string;
     descripcion: string;

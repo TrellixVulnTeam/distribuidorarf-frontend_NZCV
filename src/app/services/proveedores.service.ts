@@ -1,6 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ProductoDto } from 'app/interfaces/dto/producto-dto';
 import { ProveedorDto } from 'app/interfaces/dto/proveedor-dto';
 import { Proveedor } from 'app/interfaces/proveedor';
 import { environment } from 'environments/environment';

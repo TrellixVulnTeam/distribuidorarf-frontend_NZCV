@@ -1,5 +1,5 @@
 
-import {throwError as observableThrowError,  Observable } from 'rxjs';
+import {throwError as observableThrowError,  Observable, pipe } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { ProductDB } from '../../shared/inmemory-db/products';
 import { CountryDB } from '../../shared/inmemory-db/countries';
@@ -12,6 +12,12 @@ import { Categoria } from 'app/interfaces/categoria';
 import { CategoriasService } from 'app/services/categorias.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { Token } from 'app/interfaces/token';
+import { ProductosService } from 'app/services/productos.service';
+import { Producto } from 'app/interfaces/producto';
+import { GaleriaProductosService } from 'app/services/galeria-productos.service';
+import { GproductoDto } from 'app/interfaces/dto/gproducto-dto';
+import { environment } from 'environments/environment';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 
 
@@ -31,7 +37,7 @@ export class ShopService {
   public products: Product[] = [];
   public initialFilters = {
     minPrice: 10,
-    maxPrice: 40,
+    maxPrice: 10000,
     minRating: 1,
     maxRating: 5
   };
@@ -42,7 +48,10 @@ export class ShopService {
   }
   constructor(
     private userAPIService: UserApiService,
-    private categoriasService: CategoriasService
+    private categoriasService: CategoriasService,
+    private productosService: ProductosService,
+    private galeriaProductosService: GaleriaProductosService,
+    private http: HttpClient
   ) { }
   public getCart(): Observable<CartItem[]> {
     return of(this.cart)
@@ -80,8 +89,26 @@ export class ShopService {
     this.updateCount();
     return of(this.cart)
   }
+
+  productos: Producto[] = [];
+  gProductos: GproductoDto[] = [];
+  productosTienda: Product[] = [];
+
+  BASE_URL: string = environment.BASE_URL;
+  entity: string = environment.SERVICE_GALERIA_PRODUCTO;
+
   public getProducts(): Observable<Product[]> {
     let productDB = new ProductDB();
+
+    this.galeriaProductosService.getAll2(this.token.access_token).subscribe(
+      res => {
+        this.gProductos = res;      
+        this.gProductos.forEach(element => {
+          productDB.products.push(element);
+        });
+      }
+    );    
+
     return of(productDB.products)
       .pipe(
         delay(500),
@@ -90,7 +117,9 @@ export class ShopService {
           return data;
         })
       )
+    
   }
+
   public getProductDetails(productID): Observable<Product> {
     let productDB = new ProductDB();
     let product = productDB.products.filter(p => p._id === productID)[0];
@@ -106,10 +135,11 @@ export class ShopService {
     this.userAPIService.login().subscribe(
       res => {
         this.token = res;
+
         this.categoriasService.getAll(this.token.access_token).subscribe(
           res => {         
             res.forEach(element => {
-              categories.push(element);
+              categories.push(element.nombre);
             });            
           },
           err => {          
@@ -124,7 +154,23 @@ export class ShopService {
     return of(categories);
   }
 
-  public getFilteredProduct(filterForm: FormGroup): Observable<Product[]> {
+  // public getFilteredProduct2(filterForm: FormGroup): Observable<Product[]> {            
+  //   return combineLatest(
+  //     this.getProducts(),
+  //     filterForm.valueChanges
+  //     .pipe(
+  //       startWith(this.initialFilters),
+  //       debounceTime(400)
+  //     )
+  //   )
+  //   .pipe(
+  //     switchMap(([products, filterData]) => {
+  //       return this.filterProducts(products, filterData);
+  //     })
+  //   )
+  // }
+
+  public getFilteredProduct(filterForm: FormGroup): Observable<Product[]> {            
     return combineLatest(
       this.getProducts(),
       filterForm.valueChanges
@@ -138,13 +184,12 @@ export class ShopService {
         return this.filterProducts(products, filterData);
       })
     )
-
   }
   /*
   * If your data set is too big this may raise performance issue.
   * You should implement server side filtering instead.
   */ 
-  private filterProducts(products: Product[], filterData): Observable<Product[]> {
+  private filterProducts(products: Product[], filterData): Observable<Product[]> {        
     let filteredProducts = products.filter(p => {
       let isMatch: Boolean;
       let match = {
@@ -152,7 +197,7 @@ export class ShopService {
         caterory: false,
         price: false,
         rating: false
-      };
+      };      
       // Search
       if (
         !filterData.search
@@ -199,6 +244,11 @@ export class ShopService {
 
       return true;
     })
+
+    console.log("filterproductos")
+      console.log(products);
+      console.log(filteredProducts);
+
     return of(filteredProducts)
   }
 }

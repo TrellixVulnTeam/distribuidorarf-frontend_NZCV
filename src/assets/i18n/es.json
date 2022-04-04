@@ -129,5 +129,6 @@
   "TALLA": "Talla",
   "CANTIDAD":  "Cantidad",
   "COLORNOMBRE": "Nombre del Color",
-  "IMAGENES": "Imágenes"
+  "IMAGENES": "Imágenes",
+  "CANTIDADMINIMA": "Cantidad Mínima"
 }

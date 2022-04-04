@@ -119,6 +119,7 @@
   "CODEUSA": "External Code",
   "DESCRIPTION" : "Description",
   "CANTIDADEXISTENCIAS": "Amount (This value is automatically populated)",
+  "CANTIDADMINIMA": "Min Amount",
   "PRECIOS": "Prices",
   "LIQUIDACION": "On Sale",
   "COSTO": "Cost",

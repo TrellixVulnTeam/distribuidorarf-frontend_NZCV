@@ -41,6 +41,7 @@ import { DetalleProductoComponent } from './productos/detalle-producto/detalle-p
 import { FileUploadModule } from 'ng2-file-upload';
 import { FormularioProductoComponent } from './productos/formulario-producto/formulario-producto.component';
 import { ColorPickerModule } from 'ngx-color-picker';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 
 
@@ -83,11 +84,12 @@ import { ColorPickerModule } from 'ngx-color-picker';
     TranslateModule,
     MatStepperModule,
     MatSelectModule,
+    MatProgressBarModule,
     FormsModule,
     MatDatepickerModule,
     SharedDirectivesModule,
     FileUploadModule,
-    StarRatingModule.forRoot(),    
+    StarRatingModule.forRoot(),  
     AgmCoreModule.forRoot({ apiKey: 'AIzaSyD8JelhoeQz_I4NtIKyghdvZO7_ssFsLGM', libraries: ['places'] })   
   ],
   providers: [ShopService]

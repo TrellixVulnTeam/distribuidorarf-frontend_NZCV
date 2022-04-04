@@ -111,7 +111,7 @@ export class CategoriasComponent implements OnInit {
           );          
         }
       })
-  }    
+    }    
 
   deleteItem(row) {
     this.confirmService.confirm({message: `Desea eliminar la categoría ${row.nombre} ?`})

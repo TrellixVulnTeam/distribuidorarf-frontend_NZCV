@@ -13,22 +13,22 @@
                 </mat-expansion-panel-header>
                 <ul class="product-categories">
                   <li [ngClass]="{'fw-500': 'all' === activeCategory}" (click)="setActiveCategory('all')">{{'ALL' | translate}}</li>
-                  <li *ngFor="let c of categories$ | async" [ngClass]="{'fw-500': c === activeCategory}" (click)="setActiveCategory(c)">{{c.nombre}}</li>
+                  <li *ngFor="let c of categories$ | async" [ngClass]="{'fw-500': c === activeCategory}" (click)="setActiveCategory(c)">{{c}}</li>
                 </ul>
               </mat-expansion-panel>
               <!-- Price -->
               <mat-expansion-panel>
                 <mat-expansion-panel-header>
                   <mat-panel-title>
-                    Price
+                    Precio
                   </mat-panel-title>
                 </mat-expansion-panel-header>
-                <p class="m-0">Min: {{filterForm.controls['minPrice']['value'] || 20 | currency:'USD'}}</p>
-                <mat-slider class="full-width mb-16 pl-0" [formControl]="filterForm.controls['minPrice']" [thumbLabel]="true" [max]="filterForm.controls['maxPrice']?.value - 5"
+                <p class="m-0">Min: {{filterForm.controls['minPrice']['value'] || 20 | currency:'₡'}}</p>
+                <mat-slider class="full-width mb-16 pl-0" [formControl]="filterForm.controls['minPrice']" [thumbLabel]="true" [max]="100000"
                   [min]="20"></mat-slider>
     
-                <p class="m-0">Max: {{filterForm.controls['maxPrice']['value'] || 40 | currency:'USD'}}</p>
-                <mat-slider class="full-width pl-0" [formControl]="filterForm.controls['maxPrice']" [thumbLabel]="true" [max]="50" [min]="filterForm.controls['minPrice']?.value + 5"></mat-slider>
+                <p class="m-0">Max: {{filterForm.controls['maxPrice']['value'] || 200000 | currency:'₡'}}</p>
+                <mat-slider class="full-width pl-0" [formControl]="filterForm.controls['maxPrice']" [thumbLabel]="true" [max]="200000" [min]="filterForm.controls['minPrice']?.value + 5"></mat-slider>
               </mat-expansion-panel>
               <!-- Ratings -->
               <!-- <mat-expansion-panel>
@@ -98,11 +98,11 @@
                     <h3 class="title" [routerLink]="['/distribuidorarf/products/', product._id]">{{product.name}}</h3>
                     <p class="text-muted p-line">{{product?.subtitle}}</p>
                     <p class="text-muted p-line">
-                      <strong>Category:</strong> {{product?.category}}</p>
-                    <p class="text-muted p-line">
+                      <strong>Categoría:</strong> {{product?.category}}</p>
+                    <!-- <p class="text-muted p-line">
                       <strong>Tags:</strong>
                       <span *ngFor="let t of product.tags">{{t}} </span>
-                    </p>
+                    </p> -->
                   </div>
                   <div class="actions">
                     <div class="price-rating">
@@ -112,15 +112,18 @@
                       </div>
                       <div class="price">
                         <span>{{product?.price?.sale | currency:'USD'}}</span>
-                        <del class="text-muted">{{product?.price?.previous | currency:'USD'}}</del>
+                        <del class="text-muted" [style.display]="product?.price?.sale == product?.price?.previous ? 'none': 'block'" >{{product?.price?.previous | currency:'USD'}}</del>
                       </div>
     
                     </div>
                     <div class="add-to-cart">
                       <span fxFlex></span>
-                      <button mat-icon-button (click)="addToCart(product)">
-                        <mat-icon>add_shopping_cart</mat-icon>
-                      </button>
+                      <!-- <button mat-icon-button (click)="addToCart(product)">
+                        <mat-icon>edit</mat-icon>
+                      </button> -->
+                      <button mat-icon-button (click)="openPopUp(product)">
+                        <mat-icon>edit</mat-icon>
+                      </button>                     
                     </div>
                   </div>
                 </div>
@@ -133,27 +136,28 @@
                         <small class="text-muted">(140)</small>
                       </div>
                       <span fxFlex></span>
-                      <button mat-icon-button>
+                      <!-- <button mat-icon-button>
                         <mat-icon>playlist_add</mat-icon>
                       </button>
                       <button mat-icon-button>
                         <mat-icon>favorite</mat-icon>
-                      </button>
+                      </button> -->
                     </div>
     
                     <div>
-                      <ul>
+                      <ul *ngFor="let feature of product.features">
                         <li>
+                          <mat-icon>check</mat-icon> {{feature}}</li>
+                        <!-- <li>
                           <mat-icon>check</mat-icon> Heavy duty</li>
                         <li>
                           <mat-icon>check</mat-icon> Water resistance</li>
                         <li>
                           <mat-icon>check</mat-icon> Clean design</li>
                         <li>
-                          <mat-icon>check</mat-icon> High quality raw materials</li>
+                          <mat-icon>check</mat-icon> High quality raw materials</li> -->
                       </ul>
-                    </div>
-    
+                    </div>    
                   </div>
                 </div>
     
