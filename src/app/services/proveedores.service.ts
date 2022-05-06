@@ -15,8 +15,8 @@ export class ProveedoresService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(token: string): Observable<Proveedor[]>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  getAll(token: string): Observable<Proveedor[]>{    
+    let heads = new HttpHeaders().set('Authorization', `bearer ${token}`);             
     return this.http.get<Proveedor[]>(`${this.BASE_URL}/${this.entity}`,{headers: heads});
   }
 

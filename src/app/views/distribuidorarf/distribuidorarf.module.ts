@@ -42,7 +42,15 @@ import { FileUploadModule } from 'ng2-file-upload';
 import { FormularioProductoComponent } from './productos/formulario-producto/formulario-producto.component';
 import { ColorPickerModule } from 'ngx-color-picker';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-
+import { KardexComponent } from './kardex/kardex.component';
+import { FormularioKardexComponent } from './kardex/formulario-kardex/formulario-kardex.component';
+import { BusquedaComponent } from './kardex/busqueda/busqueda.component';
+import { LotesComponent } from './lotes/lotes.component';
+import { EmpleadosComponent } from './empleados/empleados.component';
+import { EmpleadoPopupComponent } from './empleados/empleado-popup/empleado-popup.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { FormularioLotesComponent } from './lotes/formulario-lotes/formulario-lotes.component';
+import { DetalleProductoLotePopupComponent } from './lotes/formulario-lotes/detalle-producto-lote-popup/detalle-producto-lote-popup.component';
 
 
 @NgModule({
@@ -57,9 +65,18 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
     ProveedoresComponent,
     ProveedoresPopupComponent,
     DetalleProductoComponent,
-    FormularioProductoComponent,            
+    FormularioProductoComponent,
+    KardexComponent,
+    FormularioKardexComponent,
+    BusquedaComponent,
+    LotesComponent,
+    EmpleadosComponent,
+    EmpleadoPopupComponent,
+    FormularioLotesComponent,
+    DetalleProductoLotePopupComponent
   ],
   imports: [
+    DragDropModule,
     CommonModule,
     ColorPickerModule,
     RouterModule.forChild(DistribuidorarfRoutes),

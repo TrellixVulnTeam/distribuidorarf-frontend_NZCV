@@ -52,9 +52,11 @@ export class CategoriasComponent implements OnInit {
   }
 
   getItems(){
+    this.loader.open();
     this.categoriasService.getAll(this.tokenUserApi.access_token).subscribe(
       res => {
         this.items = this.temp = res;
+        this.loader.close();
       },
       err => {
         this.snack.open(err.message, "ERROR", { duration: 4000 });

@@ -5,4 +5,5 @@ export interface CategoriaDto {
     idCategoriaPadre: number;
     fechaCreacion: Date;
     fechaUltimaModificacion: Date;
+    codigoResponsable: string;
 }

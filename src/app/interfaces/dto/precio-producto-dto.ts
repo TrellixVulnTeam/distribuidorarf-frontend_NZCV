@@ -1,4 +1,5 @@
-export interface PrecioProductoDto {    
+export interface PrecioProductoDto {        
+    idPrecioProducto: number;
     nombre: string;
     utilidad: number;    
     precioVenta: number;

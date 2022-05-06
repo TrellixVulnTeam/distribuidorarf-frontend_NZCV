@@ -1,6 +1,10 @@
 import { Routes } from '@angular/router';
 import { CategoriasComponent } from './categorias/categorias.component';
 import { ClientesComponent } from './clientes/clientes.component';
+import { EmpleadosComponent } from './empleados/empleados.component';
+import { KardexComponent } from './kardex/kardex.component';
+import { FormularioLotesComponent } from './lotes/formulario-lotes/formulario-lotes.component';
+import { LotesComponent } from './lotes/lotes.component';
 import { MarcasComponent } from './marcas/marcas.component';
 import { DetalleProductoComponent } from './productos/detalle-producto/detalle-producto.component';
 import { FormularioProductoComponent } from './productos/formulario-producto/formulario-producto.component';
@@ -19,12 +23,12 @@ export const DistribuidorarfRoutes: Routes = [
       {
         path: 'products',
         component: ProductosComponent,
-        data: { title: 'Products', breadcrumb: 'PRODUCTS' }
+        data: { title: 'Products', breadcrumb: 'PRODUCTS' },        
       },
       {
-        path: 'products/:id',
+        path: 'detalle/:id',
         component: DetalleProductoComponent,
-        data: { title: 'Detail', breadcrumb: 'Detail' }
+        data: { title: 'Detalle', breadcrumb: 'DETALLES' }
       },
       {
         path: 'product-form',
@@ -44,12 +48,32 @@ export const DistribuidorarfRoutes: Routes = [
       {
         path: 'categories',
         component: CategoriasComponent,
-        data: { title: 'Categories', breadcrumb: 'CATEGORIES' }
+        data: { title: 'Categories', breadcrumb: 'CATEGORIES                                                                                                                      ' }
       },
       {
         path: 'providers',
         component: ProveedoresComponent,
         data: { title: 'Providers', breadcrumb: 'PROVIDERS' }
+      },
+      {
+        path: 'kardex',
+        component: KardexComponent,
+        data: { title: 'Kardex', breadcrumb: 'KARDEX' }
+      },
+      {
+        path: 'employees',
+        component: EmpleadosComponent,
+        data: { title: 'Employees', breadcrumb: 'EMPLOYEES' }
+      },
+      {
+        path: 'lots',
+        component: LotesComponent,
+        data: { title: 'Lots', breadcrumb: 'LOTS' }
+      },
+      {
+        path: 'lots/lots-form',
+        component: FormularioLotesComponent,
+        data: { title: 'Lots Form', breadcrumb: 'LOTSFORM' }
       },
     ]
   }

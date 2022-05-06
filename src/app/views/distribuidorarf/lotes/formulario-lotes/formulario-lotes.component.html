@@ -1,0 +1,150 @@
+<mat-card class="p-0">
+    <mat-card-title class="">        
+        <a mat-flat-button [routerLink]="['/distribuidorarf/lots']"><mat-icon>keyboard_backspace</mat-icon></a>        
+        <mat-divider></mat-divider> 
+    </mat-card-title>
+    <mat-card-content>
+        <form [formGroup]="datosInicialesForm" (ngSubmit)="submit()">
+            <div fxLayout="row wrap">
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                    <mat-form-field style="width: 100%;">
+                        <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+                    </mat-form-field>                              
+                </div>                
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                    <mat-chip-list aria-label="Fish selection" style="float: right;">
+                        <mat-chip color="accent" selected style="color:white">Estado: {{fase}}</mat-chip>
+                    </mat-chip-list>
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                    <mat-form-field class="full-width">
+                        <input
+                        matInput              
+                        name="descripcion"
+                        formControlName="descripcion"
+                        placeholder="Descripción">
+                      </mat-form-field>
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                    <mat-form-field class="full-width">
+                    <input 
+                    matInput
+                    name="fechaLote"
+                    formControlName="fechaLote"
+                    placeholder="Fecha de lote" 
+                    [matDatepicker]="appDatepicker"                  
+                    required>
+                    <mat-datepicker-toggle matSuffix [for]="appDatepicker"></mat-datepicker-toggle>
+                    </mat-form-field>
+                    <mat-datepicker #appDatepicker></mat-datepicker>                
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">            
+                    <mat-form-field class="full-width">
+                        <input matInput placeholder="Cantidad de Productos" [(ngModel)]="cantidadTotal" type="number" [min]="0" readonly [ngModelOptions]="{standalone: true}" >
+                    </mat-form-field>
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">            
+                    <mat-form-field class="full-width">
+                        <input matInput placeholder="Costo Total Lote" [(ngModel)]="costoTotal" type="number" [min]="0" readonly [ngModelOptions]="{standalone: true}">
+                    </mat-form-field>
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                    <div class="container-item-board">
+                        <h2>{{'PRODUCTS' | translate}}</h2>
+                        <mat-form-field class="margin-333" style="width: 50%;float: right;">
+                            <input 
+                                matInput 
+                                placeholder="Filtrar" 
+                                value=""
+                                (keyup)='updateProductFilter($event)'>
+                        </mat-form-field>
+                        <div style="clear: both;"></div>
+                        <ngx-datatable      
+                            class="material ml-0 mr-0"
+                            [rows]="items"
+                            [columnMode]="'force'"
+                            [headerHeight]="50"
+                            [footerHeight]="50"                            
+                            [scrollbarH]="true"
+                            [limit]="10"
+                            [rowHeight]="50">
+                            <ngx-datatable-column name="ID" [flexGrow]="1">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row?.idProducto }}
+                            </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Nombre" [flexGrow]="1">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row?.nombre }}
+                            </ng-template>
+                            </ngx-datatable-column>                            
+                            <ngx-datatable-column [flexGrow]="1" [width]="1">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                <button mat-icon-button mat-sm-button color="primary" class="mr-16" (click)="addToLot(row)"><mat-icon>arrow_forward</mat-icon></button>                                                
+                            </ng-template>
+                            </ngx-datatable-column>
+                        </ngx-datatable>                        
+                    </div>                
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                    <div class="container-item-board">
+                        <h2>{{'LOT' | translate}}</h2>          
+                        <mat-form-field class="margin-333" style="width: 50%;float: right;">
+                            <input 
+                                matInput 
+                                placeholder="Filtrar" 
+                                value=""
+                                (keyup)='updateLotProductFilter($event)'>
+                        </mat-form-field>
+                        <div style="clear: both;"></div>
+                        <ngx-datatable      
+                            class="material ml-0 mr-0"
+                            [rows]="itemsLote"
+                            [columnMode]="'force'"
+                            [headerHeight]="50"
+                            [footerHeight]="50"                            
+                            [scrollbarH]="true"
+                            [limit]="10"
+                            [rowHeight]="50">
+                            <ngx-datatable-column [flexGrow]="1" [width]="2">
+                                <ng-template let-row="row" ngx-datatable-cell-template>
+                                    <button mat-icon-button mat-sm-button color="primary" class="mr-16" (click)="removeFromLot(row)"><mat-icon style="color: red;">arrow_back</mat-icon></button>                                                
+                                </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="ID" [flexGrow]="1">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row?.producto }}
+                            </ng-template>
+                            </ngx-datatable-column>
+                            <ngx-datatable-column name="Nombre" [flexGrow]="1">
+                                <ng-template let-row="row" ngx-datatable-cell-template>
+                                    {{ row?.descripcion }}
+                                </ng-template>
+                            </ngx-datatable-column>                            
+                            <ngx-datatable-column name="Cantidad" [flexGrow]="1">
+                                <ng-template let-row="row" ngx-datatable-cell-template>
+                                    {{ row?.cantidad }}
+                                </ng-template>
+                            </ngx-datatable-column>                                                        
+                            <ngx-datatable-column name="Precio Unitario" [flexGrow]="1">
+                                <ng-template let-row="row" ngx-datatable-cell-template>
+                                    {{ row?.costo }}
+                                </ng-template>
+                            </ngx-datatable-column>                            
+                            <ngx-datatable-column name="Precio Total" [flexGrow]="1">
+                                <ng-template let-row="row" ngx-datatable-cell-template>
+                                    {{ row?.precioTotal }}
+                                </ng-template>
+                            </ngx-datatable-column>                            
+                        </ngx-datatable>                         
+                    </div>
+                </div>
+                <div fxFlex="100" class="mt-16">
+                    <button mat-button color="warn" type="button">{{"CANCEL" | translate }}</button>
+                    <span fxFlex></span>
+                    <button mat-raised-button color="primary" [disabled]="datosInicialesForm.invalid">{{"SAVE" | translate }}</button>            
+                </div>
+            </div>
+        </form>
+    </mat-card-content>
+</mat-card>

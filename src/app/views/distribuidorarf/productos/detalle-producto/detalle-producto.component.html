@@ -1,6 +1,6 @@
 <div class="product-details-wrap m-333" fxLayout="row wrap" fxLayout.lt-md="column">
-    <div fxLayout="row" fxFlex="100" class="mb-8">
-      <button mat-icon-button class="text-muted" routerLink="/distribuidorarf/products"><mat-icon>chevron_left</mat-icon> <span >Back to Shop</span></button>
+    <div fxLayout="row" fxFlex="100" class="mb-8">      
+      <a mat-icon-button class="text-muted" routerLink="/distribuidorarf/products"  routerLinkActive="active"><mat-icon>chevron_left</mat-icon> <span >Volver</span></a>
       <span fxFlex></span>
       <span fxFlex="20px"></span>
       <!-- <button mat-raised-button color="primary" routerLink="/shop/cart">
@@ -24,37 +24,61 @@
       </div>
       <h1 class="title">{{product?.name}}</h1>
       <div class="main-info mb-16">
-        <p class="mb-8" [ngStyle]="{maxWidth: '450px'}">{{product?.description}}
-            <mat-form-field style="width: 100%;">
-                <input matInput placeholder="{{'IDENTIFICACION' | translate}}" formControlName="identificacion" required type="text" value="">
-            </mat-form-field>            
+        <p class="mb-8" [ngStyle]="{maxWidth: '450px'}">{{product?.description}}            
         </p>
-        <p class="text-muted p-line"><strong>Category:</strong> 
-            <!-- <span class="mat-color-default">{{product?.category}}</span> -->
-            <mat-form-field style="width: 100%;">
-                <input matInput placeholder="{{'IDENTIFICACION' | translate}}" formControlName="identificacion" required type="text" value="">
-            </mat-form-field>            
+        <p class="text-muted p-line"><strong>Categoría:</strong> 
+            <span class="mat-color-default">{{product?.category}}</span>            
         </p>
-        <p class="text-muted p-line"><strong>Tags:</strong> <span *ngFor="let t of product.tags"><span class="mat-color-default">{{t}}</span> </span></p>
+        <!-- <p class="text-muted p-line"><strong>Tags:</strong> <span *ngFor="let t of product.tags"><span class="mat-color-default">{{t}}</span> </span></p> -->
       </div>
       <div class="product-options">
         <div class="opt-radio mb-16">
-          <label class="option-label text-muted">Choose an option: </label>
-          <mat-radio-group fxLayout="column" fxLayoutGap="5px">
-            <!-- <mat-radio-button  [value]="'opt1'">Option 1</mat-radio-button>
+          <!-- <label class="option-label text-muted"><strong>Colores y Tallas</strong></label>           -->
+          <table style="text-align: center;">            
+            <th>Color</th>
+            <th>Talla</th>
+            <th>Disponibles</th>            
+            <th>Código</th>
+            <tr *ngFor="let detalle of producto.detalles">              
+              <td><input disabled [(colorPicker)]="color" [style.background]="detalle.colorHexadecimal" style="
+                text-align: center;
+                z-index: 100;
+                height: 32px;
+                width: 32px;
+                border-radius: 20%;
+                justify-content: center;
+                align-items: center;
+                border-style: none"
+                />
+              </td>
+              <td>{{detalle.talla}}</td>
+              <td>{{detalle.cantidad}}</td>           
+              <td>{{detalle.idDetalleProducto}}</td>   
+            </tr>
+          </table>
+          <!--<mat-radio-group fxLayout="column" fxLayoutGap="5px">
+             <mat-radio-button  [value]="'opt1'">Option 1</mat-radio-button>
             <mat-radio-button  [value]="'opt2'">Option 2</mat-radio-button>
-            <mat-radio-button  [value]="'opt3'">Option 3</mat-radio-button> -->
-          </mat-radio-group>
+            <mat-radio-button  [value]="'opt3'">Option 3</mat-radio-button> 
+          </mat-radio-group>-->
         </div>
-        <div class="opt-quantity mb-16">
+        <!-- <div class="opt-quantity mb-16">
           <label class="option-label text-muted" for="quantity">Quantity: </label>
           <input class="quantity-input default-bg" id="quantity" name="quantity" type="number" [(ngModel)]="quantity">
+        </div> -->
+        <div class="opt-quantity mb-16">
+          <label class="option-label text-muted" for="quantity">Precios: </label>
+          <ul *ngFor="let feature of product.features">
+            <li>
+              {{feature}}</li>
+          </ul>
         </div>
       </div>
       <div fxLayout="row">
-        <button mat-raised-button color="accent" (click)="addToCart()"><mat-icon>add_shopping_cart</mat-icon> Add to Cart</button>
-        <span fxFlex="8px"></span>
-        <button mat-raised-button color="primary" routerLink="/shop"><mat-icon>chevron_left</mat-icon> Back to Shop</button>
+        <!-- <button mat-raised-button color="accent" (click)="addToCart()"><mat-icon>add_shopping_cart</mat-icon> Add to Cart</button>
+        <span fxFlex="8px"></span> -->
+        <!-- <button mat-raised-button color="primary" routerLink="../../../../distribuidorarf/products"><mat-icon>chevron_left</mat-icon> Back to Shop</button>        
+        <a href="../../../../distribuidorarf/products">prueba</a> -->
       </div>
     </div>
   </div>

@@ -106,6 +106,7 @@
   "BRANCH": "Marca",
   "CATEGORIES":"Categorías",
   "CATEGORIA":"Categoría",
+  "KARDEX":"Kardex",
   "CANCEL": "Cancelar",
   "PROVIDERS": "Proveedores",
   "PROVIDER": "Proveedor",
@@ -120,7 +121,7 @@
   "DESCRIPTION" : "Descripción",
   "CANTIDADEXISTENCIAS": "Cantidad Existencias (Este valor se actualiza automáticamente)",
   "PRECIOS": "Precios",
-  "LIQUIDACION": "Liquidación",
+  "LIQUIDACION": "Descuento",
   "COSTO": "Costo",
   "PRECIO": "Precio",
   "UTILIDAD": "Utilidad",
@@ -130,5 +131,15 @@
   "CANTIDAD":  "Cantidad",
   "COLORNOMBRE": "Nombre del Color",
   "IMAGENES": "Imágenes",
-  "CANTIDADMINIMA": "Cantidad Mínima"
+  "CANTIDADMINIMA": "Cantidad Mínima",
+  "PRODUCT": "Producto",
+  "CONCEPTO": "Concepto",
+  "EMPLOYEES": "Empleados",
+  "EMPLOYEE": "Empleado",
+  "AUTORIZACION": "Autorización",
+  "LOTS": "Lotes",
+  "NEW": "Nuevo",
+  "BACK": "Volver",
+  "LOTSFORM": "Formulario Lotes",
+  "LOT": "Lote"
 }

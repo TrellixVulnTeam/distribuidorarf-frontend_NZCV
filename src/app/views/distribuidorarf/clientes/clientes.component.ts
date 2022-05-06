@@ -2,7 +2,6 @@ import { S } from '@angular/cdk/keycodes';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { TranslateService } from '@ngx-translate/core';
 import { DatatableComponent } from '@swimlane/ngx-datatable';
 import { PersonaDto } from 'app/interfaces/dto/persona-dto';
 import { Token } from 'app/interfaces/token';
@@ -11,8 +10,7 @@ import { PersonaService } from 'app/services/persona.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { AppConfirmService } from 'app/shared/services/app-confirm/app-confirm.service';
 import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
-import { environment } from 'environments/environment';
-import { Subject, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { ClientePopupComponent } from './cliente-popup/cliente-popup.component';
 import * as XLSX from 'xlsx';
 
@@ -56,7 +54,8 @@ export class ClientesComponent implements OnInit, OnDestroy {
     tipoIdentificacion: null,
     tipoPersona: null,
     usuario: null,
-    otrasSenas: null
+    otrasSenas: null,
+    codigoResponsable: null
   }
 
   columns = [{ prop: 'nombre' }, { name: 'ID' }, { name: 'apellidos' }, { name: 'maxCredito' }];
@@ -103,7 +102,7 @@ export class ClientesComponent implements OnInit, OnDestroy {
   }
 
   openPopUp(data: any = {}, isNew?) {
-    let title = isNew ? 'Agragar Cliente' : 'Modificar Cliente';
+    let title = isNew ? 'Agregar Cliente' : 'Modificar Cliente';
     let dialogRef: MatDialogRef<any> = this.dialog.open(ClientePopupComponent, {
       width: '1020px',
       disableClose: true,
@@ -121,7 +120,7 @@ export class ClientesComponent implements OnInit, OnDestroy {
             res => {
               this.items = res;
               this.loader.close();
-              this.snack.open("El cliente fue editado con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open("El cliente fue creado con éxito", "ÉXITO", { duration: 4000 });                       
             },
             err => {
               this.snack.open(err.message, "ERROR", { duration: 4000 });
@@ -166,6 +165,7 @@ export class ClientesComponent implements OnInit, OnDestroy {
           this.personaDTO.contactoRef = row.contactoRef;
           this.personaDTO.termino = row.termino.idTermino;
           this.personaDTO.tipoIdentificacion = row.tipoIdentificacion.idTipoIdetificacion;
+          this.personaDTO.codigoAutorizacion = row.codigoAutorizacion;
 
           this.personasService.update(this.tokenUserApi.access_token, this.personaDTO.identificacion, this.personaDTO).subscribe(
             res => {

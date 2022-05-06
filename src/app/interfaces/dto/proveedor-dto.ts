@@ -11,5 +11,6 @@ export interface ProveedorDto {
     latLongDireccion: string;
     url: string;
     otrasSenas: string;
+    codigoResponsable: string;
         
 }

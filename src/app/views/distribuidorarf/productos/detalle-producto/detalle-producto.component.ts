@@ -1,6 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { GproductoDto } from 'app/interfaces/dto/gproducto-dto';
+import { Producto } from 'app/interfaces/producto';
+import { Token } from 'app/interfaces/token';
+import { GaleriaProductosService } from 'app/services/galeria-productos.service';
+import { ProductosService } from 'app/services/productos.service';
+import { UserApiService } from 'app/services/user-api.service';
 import { egretAnimations } from 'app/shared/animations/egret-animations';
 import { Product } from 'app/shared/models/product.model';
 import { FileUploader } from 'ng2-file-upload';
@@ -22,61 +28,115 @@ export class DetalleProductoComponent implements OnInit {
   public cartData: any;
   private productSub: Subscription;
 
+  producto: Producto = {
+    cantidadExistencias: null,
+    cantidadMinima: null,
+    categoria: null,
+    codigoExterno: null,
+    costo: null,
+    descripcion: null,
+    detalles: null,
+    detallesProformas: null,
+    esLiquidacion: null,
+    fechaCreacion: null,
+    fechaUltimaModificacion: null,
+    idProducto: null,
+    imagenes: null,
+    kardexes: null,
+    marca: null,
+    nombre: null,
+    precios: null,
+    proveedor: null,
+    codigoResponsable: null
+  }
+
+  gProductos: GproductoDto[] = [];
+
   public photoGallery: any[] = [{url: '', state: '0'}];
   constructor(
     private shopService: ShopService,
     private route: ActivatedRoute,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private galeriaProductosService: GaleriaProductosService,
+    private tokenService: UserApiService,
+    private productosService: ProductosService
   ) { }
+
+  token: Token = {
+    access_token: null
+  }
 
   ngOnInit() {
     this.productID = this.route.snapshot.params['id'];
-    this.getProduct(this.productID);
-    this.getCart();
-    this.cartData = this.shopService.cartData;
+    this.tokenService.login().subscribe(
+      res => {
+        this.token = res;
+        this.getProduct(this.productID);
+        // this.getCart();
+        // this.cartData = this.shopService.cartData;
+      },
+      err => {
+        this.snackBar.open(err.message, "ERROR", { duration: 4000 });              
+      }
+    );    
   }
 
   ngOnDestroy() {
-    this.productSub.unsubscribe();
+    // this.productSub.unsubscribe();
   }
 
   getProduct(id) {
-    this.productSub = this.shopService.getProductDetails(id)
-    .subscribe(res => {
-      this.product = res;
-      this.initGallery(this.product)
-    }, err => {
-      this.product = {
-        _id: '',
-        name: '',
-        price: { sale: 0 }
-      };
-    })
-  }
-  getCart() {
-    this.shopService
-    .getCart()
-    .subscribe(cart => {
-      this.cart = cart;
-    })
-  }
-  addToCart() {
-    let cartItem: CartItem = {
-      product: this.product,
-      data: {
-        quantity: this.quantity,
-        options: {}
+    // this.productSub = this.shopService.getProductDetails(id)
+    // .subscribe(res => {
+    //   this.product = res;
+    //   this.initGallery(this.product)
+    // }, err => {
+    //   this.product = {
+    //     _id: '',
+    //     name: '',
+    //     price: { sale: 0 }
+    //   };
+    // });
+    this.galeriaProductosService.getAll2(this.token.access_token).subscribe(
+      res => {
+        this.gProductos = res;              
+        this.product = this.gProductos.find(x => x._id === id);        
+        this.productosService.getOne(this.token.access_token, this.product._id).subscribe(
+          res => {
+            this.producto = res;
+          }
+        );
+        this.initGallery(this.product);
+        if(!this.product) {
+          this.snackBar.open('Product not found!');
+        }
       }
-    };
-
-    this.shopService
-    .addToCart(cartItem)
-    .subscribe(res => {
-      this.cart = res;
-      this.quantity = 1;
-      this.snackBar.open('Product added to cart', 'OK', { duration: 4000 });
-    })
+    ); 
   }
+  // getCart() {
+  //   this.shopService
+  //   .getCart()
+  //   .subscribe(cart => {
+  //     this.cart = cart;
+  //   })
+  // }
+  // addToCart() {
+  //   let cartItem: CartItem = {
+  //     product: this.product,
+  //     data: {
+  //       quantity: this.quantity,
+  //       options: {}
+  //     }
+  //   };
+
+  //   this.shopService
+  //   .addToCart(cartItem)
+  //   .subscribe(res => {
+  //     this.cart = res;
+  //     this.quantity = 1;
+  //     this.snackBar.open('Product added to cart', 'OK', { duration: 4000 });
+  //   })
+  // }
 
   initGallery(product: Product) {
     if(!product.gallery) {
@@ -106,6 +166,10 @@ export class DetalleProductoComponent implements OnInit {
       p.state = '0';
       return p;
     })
-  }  
+  } 
+  
+  // volver(){
+  //   this.router.navigate(['./']);
+  // }
 
 }

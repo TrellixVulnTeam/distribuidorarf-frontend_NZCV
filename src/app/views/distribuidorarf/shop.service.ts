@@ -17,7 +17,7 @@ import { Producto } from 'app/interfaces/producto';
 import { GaleriaProductosService } from 'app/services/galeria-productos.service';
 import { GproductoDto } from 'app/interfaces/dto/gproducto-dto';
 import { environment } from 'environments/environment';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 
 
 
@@ -101,17 +101,17 @@ export class ShopService {
     let productDB = new ProductDB();
 
     this.galeriaProductosService.getAll2(this.token.access_token).subscribe(
-      res => {
+      res => {        
         this.gProductos = res;      
         this.gProductos.forEach(element => {
           productDB.products.push(element);
-        });
+        });        
       }
     );    
 
     return of(productDB.products)
       .pipe(
-        delay(500),
+        delay(1000),
         map((data: Product[]) => {
           this.products = data;
           return data;
@@ -121,7 +121,7 @@ export class ShopService {
   }
 
   public getProductDetails(productID): Observable<Product> {
-    let productDB = new ProductDB();
+    let productDB = new ProductDB();        
     let product = productDB.products.filter(p => p._id === productID)[0];
     if(!product) {
       return observableThrowError(new Error('Product not found!'));
@@ -141,6 +141,7 @@ export class ShopService {
             res.forEach(element => {
               categories.push(element.nombre);
             });            
+            this.getProducts();
           },
           err => {          
             console.log(err);
@@ -154,29 +155,13 @@ export class ShopService {
     return of(categories);
   }
 
-  // public getFilteredProduct2(filterForm: FormGroup): Observable<Product[]> {            
-  //   return combineLatest(
-  //     this.getProducts(),
-  //     filterForm.valueChanges
-  //     .pipe(
-  //       startWith(this.initialFilters),
-  //       debounceTime(400)
-  //     )
-  //   )
-  //   .pipe(
-  //     switchMap(([products, filterData]) => {
-  //       return this.filterProducts(products, filterData);
-  //     })
-  //   )
-  // }
-
   public getFilteredProduct(filterForm: FormGroup): Observable<Product[]> {            
     return combineLatest(
       this.getProducts(),
       filterForm.valueChanges
       .pipe(
         startWith(this.initialFilters),
-        debounceTime(400)
+        debounceTime(1500)
       )
     )
     .pipe(
@@ -189,7 +174,11 @@ export class ShopService {
   * If your data set is too big this may raise performance issue.
   * You should implement server side filtering instead.
   */ 
-  private filterProducts(products: Product[], filterData): Observable<Product[]> {        
+  private filterProducts(products: Product[], filterData): Observable<Product[]> {            
+    console.log("prod");
+    console.log(products);
+    console.log(filterData);
+
     let filteredProducts = products.filter(p => {
       let isMatch: Boolean;
       let match = {

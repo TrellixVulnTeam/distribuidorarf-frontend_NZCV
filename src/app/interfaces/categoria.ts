@@ -3,8 +3,9 @@ export interface Categoria {
     nombre: string;
     descripcion: string;
     idCategoriaPadre: number;
-    fechaCreacion: Date;
+    fechaCreacion: Date;    
     fechaUltimaModificacion: Date;
+    codigoResponsable: string;
 
     // -- Relaciones --
     categorias: Categoria[];

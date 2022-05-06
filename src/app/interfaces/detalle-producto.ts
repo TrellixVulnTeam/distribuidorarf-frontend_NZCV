@@ -6,8 +6,7 @@ export interface DetalleProducto {
     colorHexadecimal: string;
     talla: string;
     cantidad: number;
-    fechaCreacion: Date;
-    fechaUltimaModificacion: Date;
+    codigoResponsable: string;
 
     // -- Relaciones --    
     producto: Producto;

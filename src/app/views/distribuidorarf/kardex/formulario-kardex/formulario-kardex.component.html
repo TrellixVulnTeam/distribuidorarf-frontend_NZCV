@@ -1,0 +1,51 @@
+<h1 matDialogTitle>{{data.title}}</h1>
+<form [formGroup]="itemForm" (ngSubmit)="submit()">
+    <div fxLayout="row wrap" fxLayout.lt-sm="column">     
+        <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+            <mat-form-field style="width: 100%;">
+              <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+            </mat-form-field>          
+        </div>   
+        <div fxFlex="33"  class="pr-16">            
+            <mat-form-field style="width: 100%;">
+                <input matInput placeholder="{{'CODE' | translate}}" formControlName="idProducto">
+            </mat-form-field>
+        </div>
+        <div fxFlex="33"  class="pr-16">            
+            <mat-form-field style="width: 100%;">
+                <input matInput placeholder="{{'PRODUCT' | translate}}" formControlName="nombreProducto">
+            </mat-form-field>
+        </div>
+        <div fxFlex="33"  class="pr-16">            
+            <mat-form-field style="width: 100%;">
+                <input matInput placeholder="Cantidad en inventario" formControlName="cantidadDetalle">
+            </mat-form-field>
+        </div>
+        <div fxFlex="50"  class="pr-16">
+            <mat-form-field style="width: 100%;">
+                <mat-select placeholder="{{'DETALLE' | translate}} *" name="detalle" [(ngModel)]="idDetalle" [ngModelOptions]="{standalone: true}" #miDetalle (ngModelChange)="cambiaDetalle()">
+                    <mat-option value="-1">Selecione un detalle</mat-option>
+                    <mat-option *ngFor="let detalle of data.payload.detalles" [value]="detalle.idDetalleProducto">
+                    {{ detalle.idDetalleProducto }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div> 
+        <div fxFlex="50"  class="pr-16">
+            <mat-form-field style="width: 100%;">
+                <input matInput placeholder="{{'CANTIDAD' | translate}} *" formControlName="cantidad" type="number" [min]="0">
+            </mat-form-field>
+        </div>
+        <div fxFlex="100"  class="pr-16">
+            <mat-form-field style="width: 100%;">
+                <input matInput placeholder="{{'CONCEPTO' | translate}} *" formControlName="concepto">
+            </mat-form-field>
+        </div>
+        <div fxFlex="100" class="mt-16">
+            <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">{{"CANCEL" | translate }}</button>
+            <span fxFlex></span>
+            <button mat-raised-button color="primary" [disabled]="itemForm.invalid">{{"SAVE" | translate }}</button>            
+        </div>
+    </div>    
+</form>
+

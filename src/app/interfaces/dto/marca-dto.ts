@@ -4,4 +4,5 @@ export interface MarcaDto {
     descripcion: string;
     fechaCreacion: Date;
     fechaUltimaModificacion: Date;
+    codigoResponsable: string;
 }

@@ -20,7 +20,7 @@ export class DetallesProductosService {
     return this.http.get<DetalleProducto[]>(`${this.BASE_URL}/${this.entity}`,{headers: heads});
   }
 
-  getOne(token: string, idDetalleProducto: number): Observable<DetalleProducto>{
+  getOne(token: string, idDetalleProducto: string): Observable<DetalleProducto>{
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
     return this.http.get<DetalleProducto>(`${this.BASE_URL}/${this.entity}/${idDetalleProducto}`,{headers: heads});
   }
@@ -32,12 +32,12 @@ export class DetallesProductosService {
     return this.http.post<DetalleProducto>(`${this.BASE_URL}/${this.entity}`, detalleProductoDTO,{headers: heads});
   }
 
-  update(token: string, idDetalleProducto: number, detalleProductoDTO: DetalleProductoDto): Observable<DetalleProducto>{
+  update(token: string, idDetalleProducto: string, detalleProductoDTO: DetalleProductoDto): Observable<DetalleProducto>{
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
     return this.http.put<DetalleProducto>(`${this.BASE_URL}/${this.entity}/${idDetalleProducto}`, detalleProductoDTO,{headers: heads});
   }
 
-  delete(token: string, idDetalleProducto: number){
+  delete(token: string, idDetalleProducto: string){
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
     return this.http.delete(`${this.BASE_URL}/${this.entity}/${idDetalleProducto}`,{headers: heads});
   }

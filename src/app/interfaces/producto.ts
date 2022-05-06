@@ -18,6 +18,7 @@ export interface Producto {
     costo: number;    
     fechaCreacion: Date;
     fechaUltimaModificacion: Date;
+    codigoResponsable: string;
 
     // -- Relaciones --
     marca: Marca;

@@ -4,6 +4,7 @@ export interface DetalleProductoDto {
     colorHexadecimal: string;
     talla: string;
     cantidad: number;
+    codigoResponsable: string;
 
     // -- Relaciones --    
     producto: string;

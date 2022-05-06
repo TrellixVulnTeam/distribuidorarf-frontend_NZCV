@@ -31,6 +31,7 @@ export class PreciosProductosService {
   }
 
   update(token: string, idPrecioProducto: number, precioProductoDTO: PrecioProductoDto): Observable<PrecioProducto>{
+    console.log(precioProductoDTO);
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
     return this.http.put<PrecioProducto>(`${this.BASE_URL}/${this.entity}/${idPrecioProducto}`, precioProductoDTO,{headers: heads});
   }

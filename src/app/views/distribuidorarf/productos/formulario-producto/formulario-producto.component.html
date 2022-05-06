@@ -6,6 +6,11 @@
             <form [formGroup]="datosInicialesForm">
                 <ng-template matStepLabel>{{'GENERAL' | translate}}</ng-template>
                 <div fxLayout="row wrap">
+                    <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                        <mat-form-field style="width: 100%;">
+                            <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+                        </mat-form-field>          
+                    </div>                            
                     <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
                         <mat-form-field style="width:85%;">
                             <mat-select placeholder="{{'CATEGORIA' | translate}} *" name="categoria" [(ngModel)]="productoDTO.categoria" [ngModelOptions]="{standalone: true}" #selectCategoria >
@@ -38,12 +43,12 @@
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'CODE' | translate}} *" formControlName="idProducto" type="text" [(ngModel)]="productoDTO.idProducto">
+                            <input matInput placeholder="{{'CODE' | translate}} *" formControlName="idProducto" type="text" [(ngModel)]="productoDTO.idProducto" onkeyup="this.value = this.value.toUpperCase();">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'CODEUSA' | translate}} *" formControlName="codigoExterno" type="text" (blur)="validaCodigoProducto()" [(ngModel)]="productoDTO.codigoExterno">
+                            <input matInput placeholder="{{'CODEUSA' | translate}} *" formControlName="codigoExterno" type="text" (blur)="validaCodigoProducto()" [(ngModel)]="productoDTO.codigoExterno" onkeyup="this.value = this.value.toUpperCase();">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
@@ -100,7 +105,7 @@
                             <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta1" type="number" [min]="0" (blur)="calculaUtilidad(1)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'UTILIDAD' | translate}} {{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion1" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(11)">
+                            <input matInput placeholder="{{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion1" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(11)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
                             <input matInput placeholder="{{'PRECIOVENTA' | translate}} {{'LIQUIDACION' | translate}}" formControlName="precioVentaLiquidacion1" type="number" [min]="0" (blur)="calculaUtilidad(11)">
@@ -118,7 +123,7 @@
                             <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta2" type="number" [min]="0" (blur)="calculaUtilidad(2)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'UTILIDAD' | translate}} {{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion2" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(12)">
+                            <input matInput placeholder="{{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion2" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(12)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
                             <input matInput placeholder="{{'PRECIOVENTA' | translate}} {{'LIQUIDACION' | translate}}" formControlName="precioVentaLiquidacion2" type="number" [min]="0" (blur)="calculaUtilidad(12)">
@@ -136,7 +141,7 @@
                             <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta3" type="number" [min]="0" (blur)="calculaUtilidad(3)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'UTILIDAD' | translate}} {{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion3" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(13)">
+                            <input matInput placeholder="{{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion3" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(13)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
                             <input matInput placeholder="{{'PRECIOVENTA' | translate}} {{'LIQUIDACION' | translate}}" formControlName="precioVentaLiquidacion3" type="number" [min]="0" (blur)="calculaUtilidad(13)">
@@ -154,7 +159,7 @@
                             <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta4" type="number" [min]="0" (blur)="calculaUtilidad(4)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'UTILIDAD' | translate}} {{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion4" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(14)">
+                            <input matInput placeholder="{{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion4" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(14)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
                             <input matInput placeholder="{{'PRECIOVENTA' | translate}} {{'LIQUIDACION' | translate}}" formControlName="precioVentaLiquidacion4" type="number" [min]="0" (blur)="calculaUtilidad(14)">
@@ -322,7 +327,7 @@
                         <div style="width: 100%;" [style.display]="listaImagenes.length>0? 'block' : 'none'">
                             <mat-card>
                                 <mat-card-title style="align-items: center;">
-                                    Imágenes ya insertadas
+                                    Imágenes del producto
                                 </mat-card-title>
                                 <mat-card-content class="p-0">
                                     <table mat-table style="width: 100%;">
@@ -333,7 +338,7 @@
                                             <td><img src="{{item.URL}}" width="42px" height="42px" /></td>                                            
                                             <td><a href="{{item.URL}}" target="_blank">{{item.URL}}</a></td>
                                             <td>
-                                                <button mat-icon-button mat-sm-button color="warn" (click)="eliminarImagenAzure(item.URL)"><mat-icon>delete</mat-icon></button>
+                                                <button mat-icon-button mat-sm-button color="warn" (click)="eliminarImagenAzure(item.URL, item.idImagenProducto)"><mat-icon>delete</mat-icon></button>
                                             </td>
                                         </tr>
                                     </table>

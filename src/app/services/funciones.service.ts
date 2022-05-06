@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { CodigosProducto } from 'app/interfaces/interfaces-funciones/codigos-producto';
+import { Persona } from 'app/interfaces/persona';
 import { environment } from 'environments/environment';
 import { Observable } from 'rxjs';
 
@@ -28,5 +29,10 @@ export class FuncionesService {
   obtieneCodigosProducto(token: string, codigoExterno: string): Observable<CodigosProducto[]>{
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
     return this.http.get<CodigosProducto[]>(`${this.BASE_URL}/${this.entity}/obtieneCodigosProducto/${codigoExterno}`,{headers: heads});
+  }
+
+  obtenerEmpleados(token: string): Observable<Persona[]>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
+    return this.http.get<Persona[]>(`${this.BASE_URL}/${this.entity}/obtenerEmpleados`,{headers: heads});
   }
 }

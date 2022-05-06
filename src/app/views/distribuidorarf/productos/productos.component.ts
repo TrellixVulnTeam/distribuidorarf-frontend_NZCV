@@ -53,25 +53,24 @@ export class ProductosComponent implements OnInit {
     private dialog: MatDialog
   ) { }
 
-  ngOnInit() {
-
+  ngOnInit() {    
     this.categories$ = this.shopService.getCategories();
     this.buildFilterForm(this.shopService.initialFilters);
     
     setTimeout(() => {
       this.loader.open();
-    });
+    });    
 
     this.products$ = this.shopService
       .getFilteredProduct(this.filterForm)
       .pipe(
         map(products => {
-          this.loader.close();
-          console.log("filtro");
+          this.loader.close(); 
+          console.log("PRODUCTOS");         
           console.log(products);
           return products;
         })
-      );      
+      );  
 
     this.getCart();
     this.cartData = this.shopService.cartData;
@@ -136,27 +135,23 @@ export class ProductosComponent implements OnInit {
         }
         this.loader.open();
         if (isNew) {
-          // this.personasService.getAll(this.tokenUserApi.access_token).subscribe(
-          //   res => {
-          //     this.items = res;
-          //     this.loader.close();
-          //     this.snack.open("El cliente fue editado con éxito", "ÉXITO", { duration: 4000 });                       
-          //   },
-          //   err => {
-          //     this.snack.open(err.message, "ERROR", { duration: 4000 });
-          //   }
-          // );
+          this.products$ = this.shopService
+          .getFilteredProduct(this.filterForm)
+          .pipe(
+            map(products => {
+              this.loader.close();  
+              return products;
+            })
+          );
         } else {          
-          // this.personasService.getAll(this.tokenUserApi.access_token).subscribe(
-          //   res => {
-          //     this.items = res;
-          //     this.loader.close();
-          //     this.snack.open("El cliente fue editado con éxito", "ÉXITO", { duration: 4000 });                       
-          //   },
-          //   err => {
-          //     this.snack.open(err.message, "ERROR", { duration: 4000 });
-          //   }
-          // );          
+          this.products$ = this.shopService
+          .getFilteredProduct(this.filterForm)
+          .pipe(
+            map(products => {
+              this.loader.close();  
+              return products;
+            })
+          );               
         }
       })
   }  

@@ -106,6 +106,7 @@
   "BRANCH": "Branch",
   "CATEGORIES":"Categories",
   "CATEGORIA":"Category",
+  "KARDEX": "Kardex",
   "CANCEL": "Cancel",
   "PROVIDERS": "Providers",
   "PROVIDER": "Provider",
@@ -130,5 +131,15 @@
   "TALLA": "Size",
   "CANTIDAD":  "Quantity",
   "COLORNOMBRE": "Color Name",
-  "IMAGENES": "Images"
+  "IMAGENES": "Images",
+  "PRODUCT": "Product",
+  "CONCEPTO": "Concept",
+  "EMPLOYEES": "Employees",
+  "EMPLOYEE": "Employee",
+  "AUTORIZACION": "Authorization",
+  "LOTS": "Lots",
+  "NEW": "New",
+  "BACK": "Volver",
+  "LOTSFORM": "Lots Form",
+  "LOT": "Lot"
 }

@@ -4,13 +4,17 @@ export interface Kardex {
     idKardex: number;
 
     // -- Relaciones --
-    producto: Producto;
+    producto: string;
+    persona: string;
 
-    fecha: Date;
-    fechaCreacion: Date;
-    fechaUltimaModificacion: Date;
     unidades: number;
     balance: number;
     costo: number;    
     concepto: string;
+    idDetalleProducto: string;
+    precioVenta: string;    
+    fechaCreacion: Date,
+    fechaUltimaModificacion: Date;
+    esRetiro: boolean;
+    codigoResponsable: string;
 }

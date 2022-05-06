@@ -1,0 +1,195 @@
+<mat-card class="p-0">
+    <mat-card-title class="">
+        <div class="card-title-text">Kardex
+            <div style="float: right;">
+                <button 
+                    mat-raised-button 
+                    color="primary" (click)="openPopUp({}, true)"><mat-icon>archive</mat-icon> Recibir
+                </button>
+                <span fxFlex="8px"></span>
+                <button 
+                    mat-raised-button                     
+                    color="accent" (click)="openPopUp({}, false)"><mat-icon>eject</mat-icon> Retirar
+                </button>
+                <!-- <span fxFlex="8px"></span> -->
+                <!-- <button 
+                    mat-raised-button 
+                    color="basic" >Modificar
+                </button>
+                <span fxFlex="8px"></span>
+                <button 
+                    mat-raised-button 
+                    color="warn" >Quitar
+                </button> -->
+            </div>
+        </div>
+        <mat-divider></mat-divider>
+    </mat-card-title>
+    <mat-card-content>
+        <form [formGroup]="basicForm">
+            <div fxLayout="row wrap">
+                <!-- <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16" style="margin-bottom: 2%;">
+                    <button 
+                        mat-raised-button 
+                        color="primary" >Recibir
+                    </button>
+                    <span fxFlex="8px"></span>
+                    <button 
+                        mat-raised-button 
+                        color="accent">Retirar
+                    </button>
+                    <span fxFlex="8px"></span>
+                    <button 
+                        mat-raised-button 
+                        color="basic" >Modificar
+                    </button>
+                    <span fxFlex="8px"></span>
+                    <button 
+                        mat-raised-button 
+                        color="warn" >Quitar
+                    </button>
+                </div> -->
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                    <div class="pb-16">
+                        <mat-form-field class="full-width">
+                            <input
+                            matInput                            
+                            formControlName="id"
+                            placeholder="Código de producto"
+                            onkeyup="this.value = this.value.toUpperCase();">
+                        </mat-form-field>                        
+                    </div>                    
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                    <div class="pb-16">
+                        <button 
+                        mat-raised-button 
+                        color="primary"
+                        (click)="buscarProducto()" ><mat-icon>search</mat-icon> Buscar</button>
+                        <span fxFlex="8px"></span>
+                        <button 
+                        mat-raised-button 
+                        color="accent" (click)="openPopUpBusqueda({})"><mat-icon>toc</mat-icon>Ver Lista</button>
+                        <!-- <span fxFlex="8px"></span>
+                        <button 
+                        mat-raised-button 
+                        color="basic" ><mat-icon>visibility</mat-icon>Ver Detalle</button> -->
+                    </div>
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                    <div class="pb-16">
+                        <mat-form-field class="full-width">
+                            <input
+                            matInput                            
+                            name="descripcion"
+                            formControlName="descripcion"
+                            placeholder="Descripción"                            
+                            value="">
+                        </mat-form-field>                        
+                    </div>
+                    <div class="pb-16">
+                        <mat-form-field class="full-width">
+                            <input
+                            matInput                            
+                            name="costo"
+                            formControlName="costo"
+                            placeholder="Costo"                            
+                            value="">
+                        </mat-form-field>                        
+                    </div>
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                    <div class="pb-16">
+                        <mat-form-field class="full-width">
+                            <input                            
+                            matInput
+                            name="existencias"
+                            formControlName="existencias"                            
+                            placeholder="Cantidad Existencias"
+                            value="">
+                        </mat-form-field>                        
+                    </div>
+                    <div class="pb-16">
+                        <mat-form-field class="full-width">
+                            <input
+                            matInput                            
+                            name="precio1"
+                            formControlName="precio1"                            
+                            placeholder="Precio 1"
+                            value="">
+                        </mat-form-field>                        
+                    </div>
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                    <div class="pb-16">
+                        <mat-form-field class="full-width">
+                            <input
+                            matInput
+                            name="vendidos"
+                            formControlName="vendidos"
+                            placeholder="Existencias Vendidas"
+                            value="">
+                        </mat-form-field>                        
+                    </div>
+                    <div class="pb-16">
+                        <mat-form-field class="full-width">
+                            <input
+                            matInput
+                            name="cantidadMinima"
+                            formControlName="cantidadMinima"
+                            placeholder="Cantidad Mínima"                            
+                            value="">
+                        </mat-form-field>                        
+                    </div>
+                </div>                
+            </div>
+            <mat-divider></mat-divider>
+            <ngx-datatable      
+            class="material ml-01 mr-0"
+            style="margin-top: 1%;"
+            [rows]="items"
+            [columnMode]="'force'"
+            [headerHeight]="50"
+            [footerHeight]="50"
+            [scrollbarH]="true"            
+            [limit]="10"            
+            [rowHeight]="50">
+            <ngx-datatable-column name="Detalle" [flexGrow]="3">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.idDetalleProducto }}
+                </ng-template>
+                </ngx-datatable-column>
+            <ngx-datatable-column name="Fecha" [flexGrow]="3">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.fechaUltimaModificacion | date: 'yyyy-MM-dd hh:mm:ss a'}}
+            </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Concepto" [flexGrow]="1">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.concepto }}
+            </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Cliente" [flexGrow]="1">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.persona }}
+            </ng-template>
+            </ngx-datatable-column>            
+            <ngx-datatable-column name="Unidades" [flexGrow]="1">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.unidades }}
+                </ng-template>
+            </ngx-datatable-column>                        
+            <ngx-datatable-column name="Balance" [flexGrow]="1">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.balance }}
+                </ng-template>
+            </ngx-datatable-column>                     
+            <ngx-datatable-column name="Precio" [flexGrow]="1"> <!-- este valor es el costo -->
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                    {{ row?.costo }}
+                </ng-template>
+            </ngx-datatable-column>                                       
+        </ngx-datatable>   
+        </form>
+    </mat-card-content>
+</mat-card>

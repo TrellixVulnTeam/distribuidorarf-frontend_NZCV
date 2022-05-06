@@ -30,6 +30,7 @@ export class ProveedoresPopupComponent implements OnInit {
   public itemForm: FormGroup;
   public secondFormGroup: FormGroup;
   isLinear = false;  
+  listaEmpleados: any[] = [];
 
   //-- para el mapa --
   zoom = 17;
@@ -72,7 +73,8 @@ export class ProveedoresPopupComponent implements OnInit {
     latLongDireccion: null,
     telefono: null,    
     url: null,
-    otrasSenas: null
+    otrasSenas: null,
+    codigoResponsable: null
   }
 
   provincias: Provincia[] = [];
@@ -107,9 +109,7 @@ export class ProveedoresPopupComponent implements OnInit {
     public dialogRef: MatDialogRef<ProveedoresPopupComponent>,
     private fb: FormBuilder,
     private userApiService: UserApiService,
-    private snack: MatSnackBar,
-    private cantonesService: CantonesService,
-    private tiposIdentificacionService: TiposIdentificacionService,
+    private snack: MatSnackBar,    
     private mapsAPILoader: MapsAPILoader, 
     private ngZone: NgZone,
     private proveedoresService: ProveedoresService,
@@ -147,7 +147,8 @@ export class ProveedoresPopupComponent implements OnInit {
     });
     this.userApiService.login().subscribe(
       res => {
-        this.token = res;        
+        this.token = res;            
+        this.cargarEmpleados();
         if(this.data.payload.identificacion != '' && this.data.payload.identificacion != null){      
           this.esEditar = true;
           // console.log(this.data.payload.tipoIdentificacion.idTipoIdetificacion);                    
@@ -162,7 +163,7 @@ export class ProveedoresPopupComponent implements OnInit {
           });             
         }
       },
-      err => {
+      err => {        
         this.snack.open(err.message, "ERROR", { duration: 4000 });        
       }
     );
@@ -176,7 +177,8 @@ export class ProveedoresPopupComponent implements OnInit {
       correoElectronico: [item.correoElectronico || '', [Validators.required, Validators.email]],
       comentarios: [item.comentarios || ''],       
       estaActivo: [item.estaActivo || false],
-      url: [item.url || '', [CustomValidators.url]]
+      url: [item.url || '', [CustomValidators.url]],
+      autorizacionEmpleado: ['', Validators.required]
     });
     this.secondFormGroup = this.fb.group({
       direccion: [item.direccion || ''],
@@ -234,6 +236,16 @@ export class ProveedoresPopupComponent implements OnInit {
   }
   
   submit(){
+
+     if(this.empleadoConAutrizacion()){
+       this.finalizarProceso();
+     }else{
+      this.snack.open("El código de empleado no es correcto. Por favor validarlo y volver a intentarlo.", "ERROR", { duration: 4000 });         
+     }
+  
+  }
+
+  finalizarProceso(){
     this.proveedorDTO.identificacion = this.itemForm.controls.identificacion.value;
     this.proveedorDTO.nombre = this.itemForm.controls.nombre.value;
     this.proveedorDTO.comentarios = this.itemForm.controls.comentarios.value;
@@ -245,8 +257,8 @@ export class ProveedoresPopupComponent implements OnInit {
     this.proveedorDTO.latLongDireccion = this.secondFormGroup.controls.latLongDireccion.value;
     this.proveedorDTO.direccion = this.secondFormGroup.controls.direccion.value;        
     this.proveedorDTO.otrasSenas = this.secondFormGroup.controls.otrasSenas.value;
-
-    console.log(this.proveedorDTO);
+    this.proveedorDTO.codigoResponsable = this.itemForm.controls.autorizacionEmpleado.value;    
+    
     if(this.esEditar){      
       this.proveedoresService.update(this.token.access_token, this.proveedorDTO.identificacion, this.proveedorDTO).subscribe(
         res => {          
@@ -279,7 +291,30 @@ export class ProveedoresPopupComponent implements OnInit {
         }
       );  
 
-    }   
+    }       
+  }
+
+  empleadoConAutrizacion(){
+    let autorizado = false;    
+    this.listaEmpleados.forEach(element => {      
+      if(element.codigoAutorizacion === this.itemForm.controls.autorizacionEmpleado.value){
+        autorizado = true;
+        return autorizado;
+      }      
+    });
+
+    return autorizado;
+  }
+
+  cargarEmpleados(){
+    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+      res => {        
+        this.listaEmpleados = res;        
+      },
+      err => {
+        this.snack.open(err.message, "ERROR", { duration: 4000 });
+      }
+    );
   }
 
 }

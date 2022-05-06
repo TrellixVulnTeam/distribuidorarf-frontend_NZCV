@@ -6,7 +6,8 @@ export interface ProductoDto {
     cantidadExistencias: number;
     cantidadMinima: number;
     esLiquidacion: boolean;
-    costo: number;   
+    costo: number;
+    codigoResponsable: string;
     // -- Relaciones --
     marca: number;
     categoria: number;

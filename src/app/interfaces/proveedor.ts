@@ -15,6 +15,7 @@ export interface Proveedor {
     latLongDireccion: string;
     url: string;
     otrasSenas: string;
+    codigoResponsable: string;
     
     // -- Relaciones --    
     productos: Producto[];

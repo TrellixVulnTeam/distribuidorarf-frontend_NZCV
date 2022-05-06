@@ -1,0 +1,101 @@
+<mat-card class="p-0">
+    <mat-card-title class="">
+        <div class="card-title-text">Lotes
+            <div style="float: right;">
+              <button 
+                mat-raised-button 
+                [routerLink]="['/distribuidorarf/lots/lots-form']"
+                color="primary"><mat-icon>playlist_add</mat-icon> {{'NEW' | translate}}
+              </button>
+            </div>
+        </div>       
+        <mat-divider></mat-divider> 
+    </mat-card-title>    
+    <mat-card-content>
+        <div class="example-container">
+            <h2>{{'NEW' | translate}}</h2>
+          
+            <div
+              cdkDropList
+              #todoList="cdkDropList"
+              [cdkDropListData]="todo"
+              [cdkDropListConnectedTo]="[doneList, aduanasList, finishList]"
+              class="example-list"
+              (cdkDropListDropped)="drop($event)">
+              <div class="box-new" *ngFor="let item of todo" cdkDrag>
+                <div class="pr-16">
+                  <span>{{item}}</span> 
+                </div>                                
+                <div class="pr-4">                  
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: blue;">crop_free</span>    
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: grey;">download</span>                   
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: red;">delete_outline</span>                               
+                </div>                
+              </div>              
+            </div>
+          </div>
+          
+          <div class="example-container">
+            <h2>Revisado</h2>
+          
+            <div
+              cdkDropList
+              #doneList="cdkDropList"
+              [cdkDropListData]="done"
+              [cdkDropListConnectedTo]="[todoList, aduanasList, finishList]"
+              class="example-list"
+              (cdkDropListDropped)="drop($event)">
+              <div class="box-reviewed" *ngFor="let item of done" cdkDrag>
+                <div class="pr-16">
+                  <span>{{item}}</span> 
+                </div>                                
+                <div class="pr-4">                  
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: blue;">crop_free</span>                  
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: grey;">download</span>                                    
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: red;">delete_outline</span>                  
+                </div>
+              </div>
+            </div>
+        </div>
+        <div class="example-container">
+            <h2>Aduanas</h2>
+            <div
+              cdkDropList
+              #aduanasList="cdkDropList"
+              [cdkDropListData]="aduanas"
+              [cdkDropListConnectedTo]="[todoList, doneList, finishList]"
+              class="example-list"
+              (cdkDropListDropped)="drop($event)">
+              <div class="box-aduanas" *ngFor="let item of aduanas" cdkDrag>
+                <div class="pr-16">
+                  <span>{{item}}</span> 
+                </div>                                
+                <div class="pr-4">                                                      
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: blue;">crop_free</span>                  
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: grey;">download</span>
+                </div>
+              </div>
+            </div>
+        </div>
+        <div class="example-container">
+            <h2>Finalizado</h2>
+            <div
+              cdkDropList
+              #finishList="cdkDropList"
+              [cdkDropListData]="finished"
+              [cdkDropListConnectedTo]="[todoList, doneList, aduanasList]"
+              class="example-list"
+              (cdkDropListDropped)="drop($event)">
+              <div class="box-finished" *ngFor="let item of finished" cdkDrag>
+                <div class="pr-16">
+                  <span>{{item}}</span> 
+                </div>                                
+                <div class="pr-4">                                    
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: blue;">crop_free</span>
+                  <span class="material-icons" style="float: right;font-size: 20px;cursor: pointer;color: grey;">download</span>                                    
+                </div>
+              </div>
+            </div>
+        </div>
+    </mat-card-content>
+</mat-card>

@@ -51,17 +51,17 @@ const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
     RouterModule.forRoot(rootRouterConfig, { useHash: false, relativeLinkResolution: 'legacy' })
   ],
   declarations: [AppComponent],
-  providers: [
-    { provide: ErrorHandler, useClass: ErrorHandlerService },
-    // { provide: HAMMER_GESTURE_CONFIG, useClass: GestureConfig },
-    { provide: PERFECT_SCROLLBAR_CONFIG, useValue: DEFAULT_PERFECT_SCROLLBAR_CONFIG },
-    // REQUIRED IF YOU USE JWT AUTHENTICATION
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: TokenInterceptor,
-      multi: true,
-    },
-  ],
+  // providers: [
+  //   { provide: ErrorHandler, useClass: ErrorHandlerService },
+  //   // { provide: HAMMER_GESTURE_CONFIG, useClass: GestureConfig },
+  //   { provide: PERFECT_SCROLLBAR_CONFIG, useValue: DEFAULT_PERFECT_SCROLLBAR_CONFIG },
+  //   // REQUIRED IF YOU USE JWT AUTHENTICATION
+  //   {
+  //     provide: HTTP_INTERCEPTORS,
+  //     useClass: TokenInterceptor,
+  //     multi: true,
+  //   },
+  // ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

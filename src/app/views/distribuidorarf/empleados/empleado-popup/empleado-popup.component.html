@@ -1,0 +1,198 @@
+<h1 matDialogTitle>{{data.title}}</h1>
+<mat-card-content>  
+    <mat-horizontal-stepper [linear]="isLinear" #stepper>
+        <mat-step [stepControl]="itemForm">
+          <form [formGroup]="itemForm">
+            <ng-template matStepLabel>{{'EMPLOYEE' | translate}}</ng-template>
+            <div fxLayout="row wrap">
+              <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                <mat-slide-toggle [formControl]="itemForm.controls['estaActivo']">{{'ACTIVO' | translate}}</mat-slide-toggle>                                       
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <mat-select placeholder="{{'TIPOIDENTIFICACION' | translate}}" name="tipoIdentificacion" [(ngModel)]="personaDTO.tipoIdentificacion" [ngModelOptions]="{standalone: true}" #myIdentType>
+                    <mat-option *ngFor="let tipoIdent of tiposIdentificacion" [value]="tipoIdent.idTipoIdetificacion">
+                      {{ tipoIdent.descripcion }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'IDENTIFICACION' | translate}}" formControlName="identificacion" required type="number">
+                </mat-form-field>                    
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'NOMBRE' | translate}}" formControlName="nombre" required>
+                </mat-form-field>                    
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">                
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'APELLIDOS' | translate}}" formControlName="apellidos">
+                </mat-form-field>                                                        
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'CORREOELECTRONICO' | translate}}" formControlName="correoElectronico" name="correoElectronico" type="email" value="" required>                  
+                </mat-form-field>                        
+                <small 
+                  *ngIf="itemForm.controls['correoElectronico'].hasError('required') && itemForm.controls['correoElectronico'].touched" 
+                  class="form-error-msg"> El correo eletrónico es requerido </small>
+                  <small 
+                  *ngIf="itemForm.controls['correoElectronico'].hasError('email') && itemForm.controls['correoElectronico'].touched" 
+                  class="form-error-msg"> Correo electrónico inválido </small>                  
+              </div>                  
+              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">                
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'TELEFONO1' | translate}}" formControlName="telefono1" type="number">
+                </mat-form-field>
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'COMENTARIOS' | translate}}" formControlName="comentarios">
+                </mat-form-field>                   
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">                                
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'TELEFONO2' | translate}}" formControlName="telefono2" type="number">
+                </mat-form-field>                               
+                <mat-form-field class="full-width">
+                  <input 
+                  matInput
+                  name="fechaCumpleanos"
+                  formControlName="fechaCumpleanos"
+                  placeholder="Fecha de Cumpleaños" 
+                  [matDatepicker]="appDatepicker"                  
+                  required>
+                  
+                <mat-datepicker-toggle matSuffix [for]="appDatepicker"></mat-datepicker-toggle>
+                </mat-form-field>
+                <mat-datepicker #appDatepicker></mat-datepicker>                
+              </div>
+            </div>                
+            <div>
+              <button mat-raised-button matStepperNext color="primary" [disabled]="itemForm.invalid">{{'SIGUIENTE' | translate  }}</button>
+            </div>
+          </form>
+        </mat-step>
+        <mat-step [stepControl]="secondFormGroup">
+          <form [formGroup]="secondFormGroup">
+            <ng-template matStepLabel>{{'DIRECCION' | translate}}</ng-template>
+            <div fxLayout="row wrap">
+              <!-- <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <mat-select placeholder="{{'PROVINCIA' | translate}} *" name="provincia" (ngModelChange)="cambiaSeleccionProvincia(selectProvincia.value)" [(ngModel)]="provincia.cod" [ngModelOptions]="{standalone: true}" #selectProvincia >
+                    <mat-option *ngFor="let pro of provincias" [value]="pro.cod">
+                      {{ pro.nombre }}
+                    </mat-option>
+                  </mat-select>                             
+                </mat-form-field>                
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">           
+                <mat-form-field style="width: 100%;">
+                  <mat-select placeholder="{{'CANTON' | translate}}" name="canton" [(ngModel)]="canton.idCanton" [ngModelOptions]="{standalone: true}" #selectCanton (ngModelChange)="cambiaSeleccionCanton(selectCanton.value)">
+                    <mat-option *ngFor="let cant of cantones" [value]="cant.idCanton">
+                      {{ cant.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>                         
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">     
+                <mat-form-field style="width: 100%;">
+                  <mat-select placeholder="{{'DISTRITO' | translate}}" name="distrito" [(ngModel)]="distrito.codDistrito" [ngModelOptions]="{standalone: true}" #selectDistrito (ngModelChange)="cambiaSeleccionDistrito(selectDistrito.value)">
+                    <mat-option *ngFor="let dist of distritos" [value]="dist.codDistrito">
+                      {{ dist.nombre }}
+                    </mat-option>
+                  </mat-select>                                    
+                </mat-form-field>                               
+              </div> -->
+              <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'MAXCREDITO' | translate}}" formControlName="maxCredito" type="number">
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'SALDOFAVOR' | translate}}" formControlName="saldoFavor" type="number">
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">         
+                <mat-form-field style="width: 100%;">
+                  <mat-select placeholder="{{'TERMINO' | translate}} *" name="termino" [(ngModel)]="termino.idTermino" [ngModelOptions]="{standalone: true}" #selectTermino >
+                    <mat-option *ngFor="let term of terminos" [value]="term.idTermino">
+                      {{ term.nombre }}
+                    </mat-option>
+                  </mat-select>                             
+                </mat-form-field>                                               
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'DIRECCION' | translate}}" formControlName="direccion">
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'OTRASSENAS' | translate}}" formControlName="otrasSenas">
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16" style="margin-bottom: 1%;">
+                <div>                  
+                  <mat-form-field style="width: 100%;">
+                    <input type="text" matInput class="form-control" formControlName="googleSearch" (keydown.enter)="$event.preventDefault()" placeholder="Buscar ubicación en el mapa" autocorrect="off" autocapitalize="off" spellcheck="off" type="text" #search>                  
+                  </mat-form-field>                  
+                </div>
+                <agm-map 
+                  [ngStyle]="{height: '300px'}"
+                  [zoom]="zoom" 
+                  [latitude]="mapCenter.lat" 
+                  [longitude]="mapCenter.lng">
+                  <agm-marker *ngFor="let m of markers; let i = index"
+                  (markerClick)="clickedMarker(m.label, i)"
+                  [latitude]="m.lat"
+                  [longitude]="m.lng"
+                  [label]="m.label"
+                  [markerDraggable]="m.draggable"
+                  (dragEnd)="markerDragEnd(m, $event)">
+                    <agm-info-window>
+                      <strong>Ubicación del cliente</strong>
+                    </agm-info-window>
+                  </agm-marker>
+                </agm-map>                  
+              </div>            
+            </div>
+            <div>
+              <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">{{'ATRAS' | translate}}</button>              
+              <button mat-raised-button matStepperNext color="primary">{{'SIGUIENTE' | translate}}</button>
+            </div>            
+          </form>
+        </mat-step>
+        <mat-step  [stepControl]="thirdFormGroup">
+          <form [formGroup]="thirdFormGroup">
+            <ng-template matStepLabel>{{'AUTORIZACION' | translate}}</ng-template>
+            <div fxLayout="row wrap">
+              <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'CODE' | translate}}" formControlName="autorizacion" type="password">
+                </mat-form-field>          
+              </div>          
+              <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'CODE' | translate}} {{'EMPLOYEE' | translate}}" formControlName="codigoEmpleado" type="password">
+                </mat-form-field>          
+              </div>        
+              <!-- <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'TELEFONOREF' | translate}}" formControlName="telefonoRef" type="number">
+                </mat-form-field>          
+              </div>             -->
+            </div>          
+            <div>
+              <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">{{'ATRAS' | translate}}</button>                          
+            </div>
+          </form>          
+        </mat-step>
+      </mat-horizontal-stepper>
+</mat-card-content>
+<div style="clear: both;"></div>
+<div>
+  <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancel</button>        
+  <span fxFlex></span>
+  <button mat-raised-button color="primary" [disabled]="itemForm.invalid" (click)="submit()">{{"SAVE" | translate }}</button>          
+</div>

@@ -38,7 +38,8 @@ export class ProveedoresComponent implements OnInit {
     estaActivo: null,
     latLongDireccion: null,    
     url: null,
-    otrasSenas: null
+    otrasSenas: null,
+    codigoResponsable: null
   }
 
   columns = [{ prop: 'nombre' }, { name: 'ID' }, { name: 'correoElectronico' }, { name: 'telefono' }];
@@ -57,6 +58,7 @@ export class ProveedoresComponent implements OnInit {
     this.userApiService.login().subscribe(
       res => {
           this.token = res;                           
+          console.log(this.token);
           this.getItems();    
       },
       err => {
@@ -73,14 +75,17 @@ export class ProveedoresComponent implements OnInit {
 
   getItems() {
     this.loader.open();
+    console.log(this.token.access_token);
     this.proveedoresServive.getAll(this.token.access_token).subscribe(
       res => {
         this.items = this.temp = res;
         console.log(res);
         this.loader.close();
       },
-      err => {
+      err => {        
+        console.log(err);
         this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.loader.close();
       }
     );
   }

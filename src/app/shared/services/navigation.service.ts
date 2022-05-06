@@ -50,6 +50,9 @@ export class NavigationService {
         { name: 'PRODUCTS', state: 'products' },
         { name: 'BRANCHES', state: 'branches' },
         { name: 'CATEGORIES', state: 'categories' },
+        { name: 'KARDEX', state: 'kardex' },
+        { name: 'LOTS', state: 'lots' },
+        // { name: 'DETAIL', state: 'detalle/122kj' },
       ]
     },
     // {

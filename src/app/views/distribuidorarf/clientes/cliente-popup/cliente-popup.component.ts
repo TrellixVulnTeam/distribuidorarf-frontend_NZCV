@@ -107,7 +107,8 @@ export class ClientePopupComponent implements OnInit {
     tipoIdentificacion: null,
     tipoPersona: null,
     usuario: null,
-    otrasSenas: null
+    otrasSenas: null,
+    codigoResponsable: null
   }
 
   personaDTO: PersonaDto = {
@@ -135,7 +136,8 @@ export class ClientePopupComponent implements OnInit {
     tipoIdentificacion: null,
     tipoPersona: null,
     usuario: null,
-    otrasSenas: null
+    otrasSenas: null,
+    codigoResponsable: null
   }
 
   provinciaNueva: Provincia = {
@@ -239,11 +241,11 @@ export class ClientePopupComponent implements OnInit {
     this.buildItemForm(this.data.payload);                   
     this.userApiService.login().subscribe(
       res => {          
-          this.tokenUserApi = res;                           
+          this.tokenUserApi = res;       
+          this.cargarEmpleados();                    
           this.cargarProvincias();                        
           this.cargarTiposIdentificacion();
-          this.cargarTerminos();
-          this.cargarTiposPersona();
+          this.cargarTerminos();          
 
           if(this.data.payload.identificacion != '' && this.data.payload.identificacion != null){      
             
@@ -258,9 +260,10 @@ export class ClientePopupComponent implements OnInit {
             this.cambiaSeleccionDistrito(this.distrito.codDistrito);            
             
             this.termino.idTermino = this.data.payload.termino.idTermino;
-            this.personaDTO.tipoPersona = this.data.payload.termino.idTipoPersona;
 
             this.esEditar = true;
+            this.cargarTiposPersona();
+            // this.personaDTO.tipoPersona = this.data.payload.termino.idTipoPersona;            
 
             this.mapCenter.lat = this.data.payload.latLongDireccion.split(',')[0];
             this.mapCenter.lng = this.data.payload.latLongDireccion.split(',')[1];
@@ -290,7 +293,8 @@ export class ClientePopupComponent implements OnInit {
       fechaCumpleannos: [item.fechaCumpleannos || ''],
       codigoAutorizacion: [item.codigoAutorizacion || ''],
       estaActivo: [item.estaActivo || false],
-      fechaCumpleanos: [item.fechaCumpleannos || '', [Validators.required]]      
+      fechaCumpleanos: [item.fechaCumpleannos || '', [Validators.required]],
+      autorizacionEmpleado: ['', Validators.required]   
     });
     this.secondFormGroup = this.fb.group({
       direccion: [item.direccion || ''],
@@ -302,7 +306,7 @@ export class ClientePopupComponent implements OnInit {
     });
     this.thirdFormGroup = this.fb.group({
       telefonoRef: [item.telefonoRef || ''],
-      contactoRef: [item.contactoRef || '']
+      contactoRef: [item.contactoRef || '']      
     });
   }
 
@@ -329,13 +333,17 @@ export class ClientePopupComponent implements OnInit {
   cargarTiposPersona(){     
     this.tiposPersonaService.getAll(this.tokenUserApi.access_token).subscribe(
       res => {
-        this.tiposPersona = res;        
-        console.log(this.tiposPersona);
-        this.tiposPersona.forEach(element => {
-          if(element.nombre === "Cliente"){
-            this.personaDTO.tipoPersona = element.idTipoPersona;
-          }          
-        });            
+        this.tiposPersona = res;                
+        console.log(this.data.payload.tipoPersona.idTipoPersona);
+        if(this.esEditar){
+          this.personaDTO.tipoPersona = this.data.payload.tipoPersona.idTipoPersona;
+        }else{
+          this.tiposPersona.forEach(element => {
+            if(element.nombre === "Cliente"){
+              this.personaDTO.tipoPersona = element.idTipoPersona;
+            }          
+          });            
+        }        
       },
       err => {
         console.log(err);
@@ -458,59 +466,91 @@ export class ClientePopupComponent implements OnInit {
   }
 
   submit() {
-    this.personaDTO.identificacion = this.itemForm.controls.identificacion.value;
-    this.personaDTO.nombre = this.itemForm.controls.nombre.value;
-    this.personaDTO.apellidos = this.itemForm.controls.apellidos.value;
-    this.personaDTO.telefono1 = this.itemForm.controls.telefono1.value;
-    this.personaDTO.telefono2 = this.itemForm.controls.telefono2.value;
-    this.personaDTO.correoElectronico = this.itemForm.controls.correoElectronico.value;
-    this.personaDTO.comentarios = this.itemForm.controls.comentarios.value;
-    this.personaDTO.fechaCumpleannos = this.itemForm.controls.fechaCumpleanos.value;
-    this.personaDTO.distrito = this.distrito.codDistrito;
-    this.personaDTO.estaActivo = this.itemForm.controls.estaActivo.value;
-    this.personaDTO.direccion = this.secondFormGroup.controls.direccion.value;
-    this.personaDTO.latLongDireccion = this.secondFormGroup.controls.latLongDireccion.value;
-    this.personaDTO.maxCredito = this.secondFormGroup.controls.maxCredito.value;
-    this.personaDTO.saldoFavor = this.secondFormGroup.controls.saldoFavor.value;
-    this.personaDTO.telefonoRef = this.thirdFormGroup.controls.telefonoRef.value;
-    this.personaDTO.contactoRef = this.thirdFormGroup.controls.contactoRef.value;
-    this.personaDTO.termino = this.termino.idTermino;
-    this.personaDTO.otrasSenas = this.secondFormGroup.controls.otrasSenas.value; 
 
-    // console.log(this.itemForm.controls.otrasSenas.value);
+    if(this.empleadoConAutrizacion()){
+      this.personaDTO.identificacion = this.itemForm.controls.identificacion.value;
+      this.personaDTO.nombre = this.itemForm.controls.nombre.value;
+      this.personaDTO.apellidos = this.itemForm.controls.apellidos.value;
+      this.personaDTO.telefono1 = this.itemForm.controls.telefono1.value;
+      this.personaDTO.telefono2 = this.itemForm.controls.telefono2.value;
+      this.personaDTO.correoElectronico = this.itemForm.controls.correoElectronico.value;
+      this.personaDTO.comentarios = this.itemForm.controls.comentarios.value;
+      this.personaDTO.fechaCumpleannos = this.itemForm.controls.fechaCumpleanos.value;
+      this.personaDTO.distrito = this.distrito.codDistrito;
+      this.personaDTO.estaActivo = this.itemForm.controls.estaActivo.value;
+      this.personaDTO.direccion = this.secondFormGroup.controls.direccion.value;
+      this.personaDTO.latLongDireccion = this.secondFormGroup.controls.latLongDireccion.value;
+      this.personaDTO.maxCredito = this.secondFormGroup.controls.maxCredito.value;
+      this.personaDTO.saldoFavor = this.secondFormGroup.controls.saldoFavor.value;
+      this.personaDTO.telefonoRef = this.thirdFormGroup.controls.telefonoRef.value;
+      this.personaDTO.contactoRef = this.thirdFormGroup.controls.contactoRef.value;
+      this.personaDTO.termino = this.termino.idTermino;
+      this.personaDTO.otrasSenas = this.secondFormGroup.controls.otrasSenas.value;
+      this.personaDTO.codigoAutorizacion = this.data.payload.codigoAutorizacion; 
+      this.personaDTO.codigoResponsable = this.itemForm.controls.autorizacionEmpleado.value;
 
-    if(this.esEditar){
-      this.personasService.update(this.tokenUserApi.access_token, this.personaDTO.identificacion, this.personaDTO).subscribe(
-        res => {          
-          this.dialogRef.close(this.personaDTO);          
-        },
-        err => {
-          console.log(err); 
-          this.snack.open(err.message, "ERROR", { duration: 4000 });                   
-        }
-      );
-    }else{
-      this.funcionesService.validaClienteExiste(this.tokenUserApi.access_token, this.personaDTO.identificacion).subscribe(
-        res =>{
-          this.validaPersona = res[0];        
-          if(this.validaPersona.clienteexiste == 0){            
-            this.personasService.newRow(this.tokenUserApi.access_token, this.personaDTO).subscribe(
-              res => {                
-                this.dialogRef.close(this.personaDTO);
-              },
-              err => {
-                this.snack.open(err.message, "ERROR", { duration: 4000 });                       
-              }
-            );          
-          }else{
-            this.snack.open("El cliente ya existe", "Atención!!", { duration: 4000 });                   
+      if(this.esEditar){
+        this.personasService.update(this.tokenUserApi.access_token, this.personaDTO.identificacion, this.personaDTO).subscribe(
+          res => {          
+            this.dialogRef.close(this.personaDTO);          
+          },
+          err => {
+            console.log(err); 
+            this.snack.open(err.message, "ERROR", { duration: 4000 });                   
           }
-        },
-        err =>{
-         this.snack.open(err.message, "ERROR", { duration: 4000 });         
-        }
-      );    
-    }    
+        );
+      }else{
+        this.funcionesService.validaClienteExiste(this.tokenUserApi.access_token, this.personaDTO.identificacion).subscribe(
+          res =>{
+            this.validaPersona = res[0];        
+            if(this.validaPersona.clienteexiste == 0){            
+              this.personasService.newRow(this.tokenUserApi.access_token, this.personaDTO).subscribe(
+                res => {                
+                  this.dialogRef.close(this.personaDTO);
+                },
+                err => {
+                  this.snack.open(err.message, "ERROR", { duration: 4000 });                       
+                }
+              );          
+            }else{
+              this.snack.open("El cliente ya existe", "Atención!!", { duration: 4000 });                   
+            }
+          },
+          err =>{
+          this.snack.open(err.message, "ERROR", { duration: 4000 });         
+          }
+        );    
+      }
+    }else{
+      this.snack.open("El código de empleado no es correcto. Por favor validarlo y volver a intentarlo. Solo los administradores pueden modificar empleados", "ERROR", { duration: 4000 });         
+    }        
+  }
+
+  listaEmpleados: any[] = [];
+
+  empleadoConAutrizacion(){
+    let autorizado = false;    
+    this.listaEmpleados.forEach(element => {
+      console.log(element.tipoPersona);
+      if(element.codigoAutorizacion === this.itemForm.controls.autorizacionEmpleado.value){
+        autorizado = true;
+        return autorizado;
+      }      
+    });
+
+    return autorizado;
+  }
+
+  cargarEmpleados(){
+    this.funcionesService.obtenerEmpleados(this.tokenUserApi.access_token).subscribe(
+      res => {
+        this.listaEmpleados = res;
+        console.log(this.listaEmpleados);
+      },
+      err => {
+        this.snack.open(err.message, "ERROR", { duration: 4000 });
+      }
+    );
   }
 }
 
