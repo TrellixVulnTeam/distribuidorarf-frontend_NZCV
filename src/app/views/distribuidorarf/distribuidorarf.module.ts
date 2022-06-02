@@ -51,6 +51,11 @@ import { EmpleadoPopupComponent } from './empleados/empleado-popup/empleado-popu
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { FormularioLotesComponent } from './lotes/formulario-lotes/formulario-lotes.component';
 import { DetalleProductoLotePopupComponent } from './lotes/formulario-lotes/detalle-producto-lote-popup/detalle-producto-lote-popup.component';
+import { AsignacionDetalleProductosComponent } from './lotes/asignacion-detalle-productos/asignacion-detalle-productos.component';
+import { ActualizaProductosComponent } from './lotes/asignacion-detalle-productos/actualiza-productos/actualiza-productos.component';
+import { CreacionRapidaProductoComponent } from './productos/creacion-rapida-producto/creacion-rapida-producto.component';
+import { ProformasComponent } from './proformas/proformas.component';
+import { FacturasComponent } from './facturas/facturas.component';
 
 
 @NgModule({
@@ -73,7 +78,9 @@ import { DetalleProductoLotePopupComponent } from './lotes/formulario-lotes/deta
     EmpleadosComponent,
     EmpleadoPopupComponent,
     FormularioLotesComponent,
-    DetalleProductoLotePopupComponent
+    DetalleProductoLotePopupComponent,
+    AsignacionDetalleProductosComponent,    
+    ActualizaProductosComponent, CreacionRapidaProductoComponent, ProformasComponent, FacturasComponent
   ],
   imports: [
     DragDropModule,
@@ -82,7 +89,7 @@ import { DetalleProductoLotePopupComponent } from './lotes/formulario-lotes/deta
     RouterModule.forChild(DistribuidorarfRoutes),
     ReactiveFormsModule,
     FlexLayoutModule,
-    NgxDatatableModule,    
+    NgxDatatableModule,        
     MatInputModule,
     MatIconModule,
     MatCardModule,

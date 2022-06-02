@@ -238,7 +238,7 @@ export class ClientePopupComponent implements OnInit {
         });
       });
     });
-    this.buildItemForm(this.data.payload);                   
+    this.buildItemForm(this.data.payload);
     this.userApiService.login().subscribe(
       res => {          
           this.tokenUserApi = res;       

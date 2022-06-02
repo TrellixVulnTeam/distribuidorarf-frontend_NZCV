@@ -1,4 +1,5 @@
 export interface DetalleLoteDto {
+    idDetalleLote: string;
     lote: number;
     producto: string;
     descripcion: string;
@@ -7,4 +8,5 @@ export interface DetalleLoteDto {
     costo: number;    
     precioTotal: number;
     codigoResponsable: string;
+    cantidadAsignada: number;
 }

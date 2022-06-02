@@ -36,7 +36,7 @@ export class ShopService {
   }
   public products: Product[] = [];
   public initialFilters = {
-    minPrice: 10,
+    minPrice: 0,
     maxPrice: 10000,
     minRating: 1,
     maxRating: 5
@@ -175,9 +175,6 @@ export class ShopService {
   * You should implement server side filtering instead.
   */ 
   private filterProducts(products: Product[], filterData): Observable<Product[]> {            
-    console.log("prod");
-    console.log(products);
-    console.log(filterData);
 
     let filteredProducts = products.filter(p => {
       let isMatch: Boolean;
@@ -193,6 +190,7 @@ export class ShopService {
         || p.name.toLowerCase().indexOf(filterData.search.toLowerCase()) > -1
         || p.description.indexOf(filterData.search) > -1
         || p.tags.indexOf(filterData.search) > -1
+        || p._id.toLowerCase().indexOf(filterData.search.toLowerCase()) > -1
       ) {
         match.search = true;
       } else {

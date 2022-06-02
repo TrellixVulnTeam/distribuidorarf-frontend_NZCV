@@ -10,6 +10,8 @@ export interface Lote {
     fase: number;
     costoTotal: number;
     cantidadTotal: number;
+    moneda: string;
+    tipoCambio: number;
 
     // -- Relaciones --    
     detalles: DetalleLote[];

@@ -159,7 +159,10 @@ export class FormularioProductoComponent implements OnInit {
     persona: null,
     costo: null,
     esRetiro: null,
-    codigoResponsable: null
+    codigoResponsable: null,
+    esRetiroTemporal: null,
+    fechaReIngreso: null,
+    finalizadoReingreso: null
   }
 
   kardex: Kardex = {
@@ -175,7 +178,10 @@ export class FormularioProductoComponent implements OnInit {
     persona: null,
     precioVenta: null,
     esRetiro: null,
-    codigoResponsable: null
+    codigoResponsable: null,
+    esRetiroTemporal: null,
+    fechaReIngreso: null,
+    finalizadoReingreso: null
   }
   
   public items: any[];    
@@ -202,8 +208,7 @@ export class FormularioProductoComponent implements OnInit {
 
   productos: Producto[] = [];
 
-  ngOnInit(): void {    
-    console.log(this.data.payload._id);
+  ngOnInit(): void {        
     this.buildItemForm(this.data.payload);        
     this.items = this.detallesProducto;
     this.items.push({
@@ -234,8 +239,7 @@ export class FormularioProductoComponent implements OnInit {
   cargarProducto(idProducto){
     this.productosService.getOne(this.token.access_token, idProducto).subscribe(
       res => {
-        this.producto = res;              
-        console.log(this.producto);
+        this.producto = res;           
         this.productoDTO.idProducto = this.producto.idProducto;
         this.productoDTO.categoria = this.producto.categoria.idCategoria;
         this.productoDTO.proveedor = this.producto.proveedor.identificacion;
@@ -673,6 +677,7 @@ export class FormularioProductoComponent implements OnInit {
   //       console.log(`https://${environment.AZUREACCOUNTNAME}.blob.core.windows.net/${environment.AZURECONTAINERNAME}/${element._file.name}`);
   //     });                              
   //   });
+
   // }
 
   submit(){    
@@ -718,16 +723,17 @@ export class FormularioProductoComponent implements OnInit {
                 if(cantidadImagenes > 0){
                   this.uploader.queue.forEach(element => {      
                     const blob = new Blob([element._file], { type: element._file.type  });
+                    let nuevoNombre = element._file.name.split('.')[0] + '-' + contadorImg + '.' + element._file.name.split('.')[1];
               
-                    this.blobService.uploadImage(environment.AZURESASTOKEN, blob, element._file.name, () => {          
+                    this.blobService.uploadImage(environment.AZURESASTOKEN, blob, nuevoNombre, () => {          
                       // console.log(`https://${environment.AZUREACCOUNTNAME}.blob.core.windows.net/${environment.AZURECONTAINERNAME}/${element._file.name}`);
-                      this.imagenProductoDTO.URL = `https://${environment.AZUREACCOUNTNAME}.blob.core.windows.net/${environment.AZURECONTAINERNAME}/${element._file.name}`;
+                      this.imagenProductoDTO.URL = `https://${environment.AZUREACCOUNTNAME}.blob.core.windows.net/${environment.AZURECONTAINERNAME}/${nuevoNombre}`;
                       this.imagenProductoDTO.producto = this.producto.idProducto;
                       this.imagenesService.newRow(this.token.access_token, this.imagenProductoDTO).subscribe(
                         res => {
                           this.imagenProducto = res;                          
                           if(contadorImg == cantidadImagenes){
-                            this.progreso = 75;                            
+                            this.progreso = 75;  
                             // Insertar Detalles (Paso 4)
                             let contadorDetalles: number = this.items.length;
                             let contadorDetalle = 1;
@@ -739,11 +745,11 @@ export class FormularioProductoComponent implements OnInit {
                                 this.detalleProductoDTO.colorNombre = element.nombreColor;
                                 this.detalleProductoDTO.producto = this.producto.idProducto;
                                 this.detalleProductoDTO.talla = element.talla;    
-                                this.detalleProductoDTO.codigoResponsable = this.datosInicialesForm.controls.autorizacionEmpleado.value;
-                                
-                                let detalle = this.producto.detalles.findIndex(x => x.idDetalleProducto == element.id);
+                                this.detalleProductoDTO.codigoResponsable = this.datosInicialesForm.controls.autorizacionEmpleado.value;                                
+
+                                let detalle = this.producto.detalles.findIndex(x => x.idDetalleProducto === element.id);
                                 if(contadorDetalle > 1){
-                                  if(detalle > 0){ // -- debe actualizar el registro
+                                  if(detalle > -1){ // -- debe actualizar el registro
                                     this.detallesProductosService.update(this.token.access_token, element.id, this.detalleProductoDTO).subscribe(
                                       res =>{
                                         this.detalleProducto = res;                                                                  
@@ -763,8 +769,8 @@ export class FormularioProductoComponent implements OnInit {
                                       res => {
                                         this.detalleProducto = res;                            
                                         // -- Inserta la mercaderia nueva en kardex                                                                                
-                                        let precioKardex = this.productoDTO.esLiquidacion ? this.preciosForm.controls.precioVentaLiquidacion1.value : this.preciosForm.controls.precioVenta.value;
-                                        this.insertaKardex(this.detalleProducto.idDetalleProducto, this.detalleProducto.cantidad, this.productoDTO.cantidadExistencias, precioKardex, this.producto.costo, this.productoDTO.idProducto, "Inclusión Detalle de producto", false); 
+                                        // let precioKardex = this.productoDTO.esLiquidacion ? this.preciosForm.controls.precioVentaLiquidacion1.value : this.preciosForm.controls.precioVenta.value;
+                                        // this.insertaKardex(this.detalleProducto.idDetalleProducto, this.detalleProducto.cantidad, this.productoDTO.cantidadExistencias, precioKardex, this.producto.costo, this.productoDTO.idProducto, "Inclusión Detalle de producto", false); 
 
                                         if(contadorDetalle == contadorDetalles){
                                           this.progreso = 100;

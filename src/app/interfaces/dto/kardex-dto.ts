@@ -11,5 +11,7 @@ export interface KardexDto {
     costo: number;    
     esRetiro: boolean;
     codigoResponsable: string;
-    
+    esRetiroTemporal: boolean;
+    fechaReIngreso: Date;
+    finalizadoReingreso: boolean;    
 }

@@ -1,0 +1,68 @@
+<h1 matDialogTitle>{{data.title}}</h1>
+<mat-card-content>
+    <form [formGroup]="itemForm">
+        <div fxLayout="row wrap">
+            <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                    <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+                </mat-form-field>          
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                <mat-form-field style="width:85%;">
+                    <mat-select placeholder="{{'CATEGORIA' | translate}} *" name="categoria" [(ngModel)]="productoDTO.categoria" [ngModelOptions]="{standalone: true}" #selectCategoria >
+                      <mat-option *ngFor="let categoria of categorias" [value]="categoria.idCategoria">
+                        {{ categoria.nombre }}
+                      </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <button mat-mini-fab color="primary" (click)="openPopUp({}, true)" type="button"><mat-icon>add</mat-icon></button>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                <mat-form-field style="width: 85%;">
+                    <mat-select placeholder="{{'PROVIDER' | translate}} *" name="proveedor" [(ngModel)]="productoDTO.proveedor" [ngModelOptions]="{standalone: true}" #selectProveedor >
+                      <mat-option *ngFor="let proveedor of proveedores" [value]="proveedor.identificacion">
+                        {{ proveedor.nombre }}
+                      </mat-option>
+                    </mat-select>                            
+                </mat-form-field>
+                <button mat-mini-fab color="primary" type="button" (click)="openPopUpProveedor({}, true)"><mat-icon>add</mat-icon></button>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
+                <mat-form-field style="width: 85%;">
+                    <mat-select placeholder="{{'BRANCH' | translate}} *" name="proveedor" [(ngModel)]="productoDTO.marca" [ngModelOptions]="{standalone: true}" #selectMarca >
+                      <mat-option *ngFor="let marca of marcas" [value]="marca.idMarca">
+                        {{ marca.nombre }}
+                      </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <button mat-mini-fab color="primary" type="button" (click)="openPopUpMarca({}, true)"><mat-icon>add</mat-icon></button>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                    <input matInput placeholder="{{'CODE' | translate}} *" formControlName="idProducto" type="text" [(ngModel)]="productoDTO.idProducto" onkeyup="this.value = this.value.toUpperCase();">
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                    <input matInput placeholder="{{'CODEUSA' | translate}} *" formControlName="codigoExterno" type="text" (blur)="validaCodigoProducto()" [(ngModel)]="productoDTO.codigoExterno" onkeyup="this.value = this.value.toUpperCase();">
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                    <input matInput placeholder="{{'NOMBRE' | translate}} *" formControlName="nombre" type="text" [(ngModel)]="productoDTO.nombre">
+                </mat-form-field>
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                    <textarea matInput placeholder="{{'DESCRIPTION' | translate}}" formControlName="descripcion" [(ngModel)]="productoDTO.descripcion" type="text"></textarea>
+                </mat-form-field>
+            </div>
+        </div>
+    </form>
+</mat-card-content>
+<div style="clear: both;"></div>
+<div>    
+  <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancel</button>        
+  <span fxFlex></span>
+  <button mat-raised-button color="primary" [disabled]="itemForm.invalid" (click)="submit()">{{"SAVE" | translate }}</button>          
+</div>

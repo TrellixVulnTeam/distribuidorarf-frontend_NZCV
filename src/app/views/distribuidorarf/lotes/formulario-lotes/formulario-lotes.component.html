@@ -10,8 +10,23 @@
                     <mat-form-field style="width: 100%;">
                         <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
                     </mat-form-field>                              
-                </div>                
-                <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                </div>                                
+                <div fxFlex="100" fxFlex.gt-xs="37" class="pr-16">
+                    <mat-form-field style="width: 70%;">
+                        <mat-select placeholder="Moneda" name="moneda" [(ngModel)]="moneda" [ngModelOptions]="{standalone: true}" #selectMoneda>
+                            <mat-option value="CRC">
+                                Colones
+                            </mat-option>
+                            <mat-option value="USD">
+                                Dólares
+                            </mat-option>
+                        </mat-select>                        
+                    </mat-form-field>
+                    <mat-form-field style="width: 28%;margin-left: 2%;" [style.display]="moneda==='USD'?'inline-block':'none'">
+                        <input matInput placeholder="Tipo Cambio" [(ngModel)]="tipoCambio" type="number" [min]="0" [ngModelOptions]="{standalone: true}">
+                    </mat-form-field>                    
+                </div>
+                <div fxFlex="100" fxFlex.gt-xs="13" class="pr-16">
                     <mat-chip-list aria-label="Fish selection" style="float: right;">
                         <mat-chip color="accent" selected style="color:white">Estado: {{fase}}</mat-chip>
                     </mat-chip-list>
@@ -50,7 +65,7 @@
                 </div>
                 <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                     <div class="container-item-board">
-                        <h2>{{'PRODUCTS' | translate}}</h2>
+                        <h2>{{'PRODUCTS' | translate}} <span class="material-icons" style="color: green;cursor: pointer;margin-bottom: 1%;" (click)="crearProductoRapido({})">add_box</span></h2>
                         <mat-form-field class="margin-333" style="width: 50%;float: right;">
                             <input 
                                 matInput 
@@ -80,7 +95,7 @@
                             </ngx-datatable-column>                            
                             <ngx-datatable-column [flexGrow]="1" [width]="1">
                             <ng-template let-row="row" ngx-datatable-cell-template>
-                                <button mat-icon-button mat-sm-button color="primary" class="mr-16" (click)="addToLot(row)"><mat-icon>arrow_forward</mat-icon></button>                                                
+                                <button mat-icon-button mat-sm-button color="primary" class="mr-16" type="button" (click)="addToLot(row)"><mat-icon>arrow_forward</mat-icon></button>                                                
                             </ng-template>
                             </ngx-datatable-column>
                         </ngx-datatable>                        
@@ -108,7 +123,7 @@
                             [rowHeight]="50">
                             <ngx-datatable-column [flexGrow]="1" [width]="2">
                                 <ng-template let-row="row" ngx-datatable-cell-template>
-                                    <button mat-icon-button mat-sm-button color="primary" class="mr-16" (click)="removeFromLot(row)"><mat-icon style="color: red;">arrow_back</mat-icon></button>                                                
+                                    <button mat-icon-button mat-sm-button color="primary" type="button" class="mr-16" (click)="removeFromLot(row)"><mat-icon style="color: red;">arrow_back</mat-icon></button>                                                
                                 </ng-template>
                             </ngx-datatable-column>
                             <ngx-datatable-column name="ID" [flexGrow]="1">

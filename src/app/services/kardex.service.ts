@@ -22,9 +22,9 @@ export class KardexService {
     return this.http.get<Kardex[]>(`${this.BASE_URL}/${this.entity}/${idProducto}`,{headers: heads});
   }
 
-  getOne(token: string, idProducto: string, idKardex: number): Observable<Kardex[]>{
+  getOne(token: string, idProducto: string, idKardex: number): Observable<Kardex>{
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
-    return this.http.get<Kardex[]>(`${this.BASE_URL}/${this.entity}/${idProducto}/${idKardex}`,{headers: heads});
+    return this.http.get<Kardex>(`${this.BASE_URL}/${this.entity}/${idProducto}/${idKardex}`,{headers: heads});
   }
 
   newRow(token: string, kardexDTO: KardexDto): Observable<Kardex>{

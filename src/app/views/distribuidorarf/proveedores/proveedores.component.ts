@@ -57,8 +57,7 @@ export class ProveedoresComponent implements OnInit {
   ngOnInit(): void {
     this.userApiService.login().subscribe(
       res => {
-          this.token = res;                           
-          console.log(this.token);
+          this.token = res;       
           this.getItems();    
       },
       err => {

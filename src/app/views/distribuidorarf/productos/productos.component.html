@@ -94,8 +94,9 @@
                   <img [src]="product.photo" alt="" style="max-height: 400px;">
                 </div>
                 <div class="info-wrap p-16">
-                  <div class="main-info">
+                  <div class="main-info">                    
                     <h3 class="title" [routerLink]="['/distribuidorarf/detalle/', product._id]">{{product.name}}</h3>
+                    <p class="text-muted p-line">{{'CODE' | translate}}: {{product._id}}</p>
                     <p class="text-muted p-line">{{product?.subtitle}}</p>
                     <p class="text-muted p-line">
                       <strong>Categoría:</strong> {{product?.category}}</p>

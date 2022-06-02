@@ -1,0 +1,109 @@
+<h1 matDialogTitle>{{data.title}}</h1>
+<mat-card-content>
+    <form [formGroup]="itemForm">
+        <div fxLayout="row wrap">
+            <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+                <mat-form-field style="width: 100%;">
+                  <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+                </mat-form-field>          
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <div class="container-item-board">
+                    <h2>{{'PRODUCTS' | translate}}</h2>
+                    <mat-form-field class="margin-333" style="width: 50%;float: right;">
+                        <input 
+                            matInput 
+                            placeholder="Filtrar" 
+                            value=""
+                            (keyup)='updateProductFilter($event)'>
+                    </mat-form-field>
+                    <div style="clear: both;"></div>
+                    <ngx-datatable      
+                        class="material ml-0 mr-0"
+                        [rows]="items"
+                        [columnMode]="'force'"
+                        [headerHeight]="50"
+                        [footerHeight]="50"                            
+                        [scrollbarH]="true"
+                        [limit]="10"
+                        [rowHeight]="50">
+                        <ngx-datatable-column name="ID" [flexGrow]="1">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            {{ row?.idProducto }}
+                        </ng-template>
+                        </ngx-datatable-column>
+                        <ngx-datatable-column name="Nombre" [flexGrow]="1">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            {{ row?.nombre }}
+                        </ng-template>
+                        </ngx-datatable-column>                            
+                        <ngx-datatable-column [flexGrow]="1" [width]="1">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            <button mat-icon-button mat-sm-button color="primary" class="mr-16" type="button" (click)="addToLot(row)"><mat-icon>arrow_forward</mat-icon></button>                                                
+                        </ng-template>
+                        </ngx-datatable-column>
+                    </ngx-datatable>                        
+                </div>                
+            </div>
+            <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
+                <div class="container-item-board">
+                    <h2>{{'LOT' | translate}}</h2>          
+                    <mat-form-field class="margin-333" style="width: 50%;float: right;">
+                        <input 
+                            matInput 
+                            placeholder="Filtrar" 
+                            value=""
+                            (keyup)='updateLotProductFilter($event)'>
+                    </mat-form-field>
+                    <div style="clear: both;"></div>
+                    <ngx-datatable      
+                        class="material ml-0 mr-0"
+                        [rows]="itemsLote"
+                        [columnMode]="'force'"
+                        [headerHeight]="50"
+                        [footerHeight]="50"                            
+                        [scrollbarH]="true"
+                        [limit]="10"
+                        [rowHeight]="50">
+                        <ngx-datatable-column [flexGrow]="1" [width]="2">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                <button mat-icon-button mat-sm-button color="primary" type="button" class="mr-16" (click)="removeFromLot(row)"><mat-icon style="color: red;">arrow_back</mat-icon></button>                                                
+                            </ng-template>
+                        </ngx-datatable-column>
+                        <ngx-datatable-column name="ID" [flexGrow]="1">
+                        <ng-template let-row="row" ngx-datatable-cell-template>
+                            {{ row?.producto }}
+                        </ng-template>
+                        </ngx-datatable-column>
+                        <ngx-datatable-column name="Nombre" [flexGrow]="1">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row?.descripcion }}
+                            </ng-template>
+                        </ngx-datatable-column>                            
+                        <ngx-datatable-column name="Cantidad" [flexGrow]="1">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row?.cantidad }}
+                            </ng-template>
+                        </ngx-datatable-column>                                                        
+                        <ngx-datatable-column name="Precio Unitario" [flexGrow]="1">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row?.costo }}
+                            </ng-template>
+                        </ngx-datatable-column>                            
+                        <ngx-datatable-column name="Precio Total" [flexGrow]="1">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row?.precioTotal }}
+                            </ng-template>
+                        </ngx-datatable-column>                            
+                    </ngx-datatable>                         
+                </div>
+            </div>
+        </div>
+    </form>
+</mat-card-content>
+<div style="clear: both;"></div>
+<div>    
+  <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancel</button>        
+  <span fxFlex></span>
+  <button mat-raised-button color="primary" [disabled]="itemForm.invalid" (click)="submit()">{{"SAVE" | translate }}</button>          
+</div>

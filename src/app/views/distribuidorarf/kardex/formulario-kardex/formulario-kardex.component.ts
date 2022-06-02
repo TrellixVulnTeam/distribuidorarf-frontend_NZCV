@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, ElementRef, Inject, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -13,11 +13,29 @@ import { FuncionesService } from 'app/services/funciones.service';
 import { KardexService } from 'app/services/kardex.service';
 import { ProductosService } from 'app/services/productos.service';
 import { UserApiService } from 'app/services/user-api.service';
+import { MAT_DATE_FORMATS } from '@angular/material/core';
+import { Kardex } from 'app/interfaces/kardex';
+import Swal from 'sweetalert2';
+
+export const MY_DATE_FORMATS = {
+  parse: {
+    dateInput: 'DD/MM/YYYY',
+  },
+  display: {
+    dateInput: 'DD/MM/YYYY',
+    monthYearLabel: 'MMMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY'
+  },
+};
 
 @Component({
   selector: 'app-formulario-kardex',
   templateUrl: './formulario-kardex.component.html',
-  styleUrls: ['./formulario-kardex.component.scss']
+  styleUrls: ['./formulario-kardex.component.scss'],
+  providers: [
+    { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS }
+  ]
 })
 export class FormularioKardexComponent implements OnInit {
 
@@ -25,6 +43,12 @@ export class FormularioKardexComponent implements OnInit {
   token: Token = {
     access_token: null
   }
+
+  mensaje: string;
+
+  esRetiroTemporal: boolean = false;
+  @ViewChild("fechaReingresoElement") fechaReingresoElement: ElementRef;
+  @ViewChild("iconoTemporalElement") iconoTemporalElement: ElementRef;
 
   productoDTO: ProductoDto = {
     cantidadExistencias: null,
@@ -51,7 +75,45 @@ export class FormularioKardexComponent implements OnInit {
     unidades: null,
     costo: null,
     esRetiro: null,
-    codigoResponsable: null
+    codigoResponsable: null,
+    esRetiroTemporal: null,
+    fechaReIngreso: null,
+    finalizadoReingreso: null
+  }
+
+  kardexRetiroTemporalDTO: KardexDto = {
+    balance: null,
+    concepto: null,
+    idDetalleProducto: null,
+    persona: null,
+    precioVenta: null,
+    producto: null,
+    unidades: null,
+    costo: null,
+    esRetiro: null,
+    codigoResponsable: null,
+    esRetiroTemporal: null,
+    fechaReIngreso: null,
+    finalizadoReingreso: null
+  }
+
+  kardexEncontrado: Kardex = {
+    balance: null,
+    concepto: null,
+    idDetalleProducto: null,
+    persona: null,
+    precioVenta: null,
+    producto: null,
+    unidades: null,
+    costo: null,
+    esRetiro: null,
+    codigoResponsable: null,
+    esRetiroTemporal: null,
+    fechaReIngreso: null,
+    finalizadoReingreso: null,
+    fechaCreacion: null,
+    fechaUltimaModificacion: null,
+    idKardex: null
   }
 
   detalleDTO: DetalleProductoDto = {
@@ -66,6 +128,7 @@ export class FormularioKardexComponent implements OnInit {
 
   idDetalle: string = "-1";
   listaEmpleados: Persona[] = [];
+  maxCant: number = 1000000;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -79,18 +142,35 @@ export class FormularioKardexComponent implements OnInit {
     private funcionesService: FuncionesService,
   ) { }
 
-  ngOnInit(): void {    
-    console.log(this.data.payload);    
-    this.buildItemForm(this.data.payload);
-    if(this.data.recibir == true){
-      this.itemForm.controls.concepto.setValue('Inclusión de mercadería');
-    }else{
-      this.itemForm.controls.concepto.setValue('Retiro de mercadería');
-    }
+  ngOnInit(): void {        
+    this.buildItemForm(this.data.payload);        
     this.userApiService.login().subscribe(
       res => {
         this.token = res;       
         this.cargarEmpleados();
+        if(this.data.recibir == true){
+          let tagIcono = this.iconoTemporalElement.nativeElement;
+          tagIcono.classList.add('invisible');
+          this.itemForm.controls.concepto.setValue('Inclusión de mercadería');
+          if(this.data.idDevolucion > 0){
+            this.mensaje = 'La cantidad de productos no re-integrados en este proceso quedarán desechados automáticamente.';            
+            // Si el recibir es producto de un reintegro de producto que se habia sacado de inventario por algun motivo busca el kardex correspondiente
+            this.kardexService.getOne(this.token.access_token, this.data.payload.idProducto, this.data.idDevolucion).subscribe(
+              res => {
+                this.kardexEncontrado = res;
+                this.maxCant = Math.abs(this.kardexEncontrado.unidades);
+                this.idDetalle = this.kardexEncontrado.idDetalleProducto;
+                this.itemForm.controls.concepto.setValue('Recibido de retiro temporal: ' + this.kardexEncontrado.idKardex);
+                this.cambiaDetalle();
+              },
+              err => {
+                this.snack.open(err.message, "ERROR", { duration: 4000 });
+              }
+            );
+          }          
+        }else{      
+          this.itemForm.controls.concepto.setValue('Retiro de mercadería');
+        }        
       },
       err => {
         this.snack.open(err.message, "ERROR", { duration: 4000 });
@@ -99,6 +179,10 @@ export class FormularioKardexComponent implements OnInit {
   }
 
   submit(){
+    if(this.esRetiroTemporal == true && this.itemForm.controls.fecha.value == null){
+      this.snack.open("El retiro temporal requiere que indique una fecha de re-integro.", "ERROR", { duration: 4000 });         
+      return;
+    }
     if(this.empleadoConAutrizacion()){
       this.finalizaFormulario();
     }else{
@@ -111,6 +195,10 @@ export class FormularioKardexComponent implements OnInit {
     this.crearObjectoDetalleDTO(this.data.payload);    
     
     if(this.data.recibir == true){                  
+      // si es devolución primero debe alertar de que el retiro temporal quedará finalizado.
+      if(this.data.idDevolucion > 0){
+        this.finalizaKardexRetiroTemporal();
+      } 
       this.recibir();
     }else{
       if(this.validaCantidadExistencias(this.data.payload) === true){
@@ -123,28 +211,36 @@ export class FormularioKardexComponent implements OnInit {
   }
 
   validaCantidadExistencias(item){
-    const detalleActualizar = item.detalles.find(x => x.idDetalleProducto === this.idDetalle);
-    console.log("Cantidad existencias: " + detalleActualizar.cantidad);
+    const detalleActualizar = item.detalles.find(x => x.idDetalleProducto === this.idDetalle);    
     if(this.itemForm.controls.cantidad.value > detalleActualizar.cantidad){      
       return false;
     }    
     return true;
   }
 
+  finalizaKardexRetiroTemporal(){
+    this.crearObjetoKardexRetiroTemporalDTO();
+    this.kardexService.update(this.token.access_token, this.kardexEncontrado.idKardex, this.kardexRetiroTemporalDTO).subscribe(
+      res => {
+        this.snack.open("Re-inserción finalizada con éxito.", "Actualización!!", { duration: 4000 }); 
+      },
+      err => {
+        this.snack.open(err.message, "ERROR", { duration: 4000 }); 
+      }
+    );
+  }
+
   retirar(){
     // -- inserta en kardex        
     this.kardexService.newRow(this.token.access_token, this.kardexDTO).subscribe(
       res => {
-        console.log(res);
         // -- actualiza el detalle        
         this.detallesProductosSerice.update(this.token.access_token, this.detalleDTO.idDetalleProducto, this.detalleDTO).subscribe(
           res => {
-            console.log(res);
             // -- actualiza el producto
             this.productoDTO.cantidadExistencias = this.productoDTO.cantidadExistencias - Math.abs(this.kardexDTO.unidades);
             this.productosService.update(this.token.access_token, this.productoDTO.idProducto, this.productoDTO).subscribe(
               res => {
-                console.log(res);
                 this.dialogRef.close(res);
               },
               err => {
@@ -163,20 +259,18 @@ export class FormularioKardexComponent implements OnInit {
     );
   }
 
-  recibir(){
+  recibir(){    
     // -- inserta en kardex        
     this.kardexService.newRow(this.token.access_token, this.kardexDTO).subscribe(
       res => {
-        console.log(res);
         // -- actualiza el detalle        
         this.detallesProductosSerice.update(this.token.access_token, this.detalleDTO.idDetalleProducto, this.detalleDTO).subscribe(
           res => {
-            console.log(res);
             // -- actualiza el producto
             this.productoDTO.cantidadExistencias = this.productoDTO.cantidadExistencias + Math.abs(this.kardexDTO.unidades);
             this.productosService.update(this.token.access_token, this.productoDTO.idProducto, this.productoDTO).subscribe(
               res => {
-                console.log(res);
+                this.snack.open("Producto recibido.", "Éxito!!", { duration: 4000 }); 
                 this.dialogRef.close(res);
               },
               err => {
@@ -193,6 +287,22 @@ export class FormularioKardexComponent implements OnInit {
         this.snack.open(err.message, "ERROR", { duration: 4000 });
       }
     );
+  }
+
+  crearObjetoKardexRetiroTemporalDTO(){
+    this.kardexRetiroTemporalDTO.idDetalleProducto = this.kardexEncontrado.idDetalleProducto;
+    this.kardexRetiroTemporalDTO.unidades = this.kardexEncontrado.unidades;
+    this.kardexRetiroTemporalDTO.balance = this.kardexEncontrado.balance;
+    this.kardexRetiroTemporalDTO.concepto = this.kardexEncontrado.concepto;
+    this.kardexRetiroTemporalDTO.precioVenta = this.kardexEncontrado.precioVenta;
+    this.kardexRetiroTemporalDTO.producto = this.kardexEncontrado.producto.idProducto;
+    this.kardexRetiroTemporalDTO.costo = this.kardexEncontrado.costo;
+    this.kardexRetiroTemporalDTO.persona = this.kardexEncontrado.persona;
+    this.kardexRetiroTemporalDTO.codigoResponsable = this.itemForm.controls.autorizacionEmpleado.value;
+    this.kardexRetiroTemporalDTO.esRetiro = this.kardexEncontrado.esRetiro;
+    this.kardexRetiroTemporalDTO.fechaReIngreso = this.kardexEncontrado.fechaReIngreso;
+    this.kardexRetiroTemporalDTO.finalizadoReingreso = true;
+    this.kardexRetiroTemporalDTO.esRetiroTemporal = this.kardexEncontrado.esRetiroTemporal;
   }
 
   cambiaDetalle(){
@@ -210,7 +320,8 @@ export class FormularioKardexComponent implements OnInit {
       idProducto: [{value: item.idProducto || '', disabled: true}],
       concepto: ['', Validators.required],
       cantidadDetalle: [{value: '', disabled: true}],
-      autorizacionEmpleado: ['', Validators.required]   
+      autorizacionEmpleado: ['', Validators.required],
+      fecha: [],
     });
     this.kardexDTO.producto = item.idProducto;
     this.crearProductoDTO(item);
@@ -246,6 +357,9 @@ export class FormularioKardexComponent implements OnInit {
     this.kardexDTO.costo = item.costo;
     this.kardexDTO.idDetalleProducto = this.idDetalle;          
     this.kardexDTO.codigoResponsable = this.itemForm.controls.autorizacionEmpleado.value;
+    this.kardexDTO.esRetiroTemporal = this.esRetiroTemporal;
+    this.kardexDTO.fechaReIngreso = this.itemForm.controls.fecha.value;
+    this.kardexDTO.finalizadoReingreso = false;
   }
 
   crearProductoDTO(item){
@@ -265,8 +379,7 @@ export class FormularioKardexComponent implements OnInit {
 
   empleadoConAutrizacion(){
     let autorizado = false;    
-    this.listaEmpleados.forEach(element => {
-      console.log(element.tipoPersona);
+    this.listaEmpleados.forEach(element => {      
       if(element.codigoAutorizacion === this.itemForm.controls.autorizacionEmpleado.value){
         autorizado = true;
         return autorizado;
@@ -280,12 +393,37 @@ export class FormularioKardexComponent implements OnInit {
     this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
       res => {
         this.listaEmpleados = res;
-        console.log(this.listaEmpleados);
       },
       err => {
         this.snack.open(err.message, "ERROR", { duration: 4000 });
       }
     );
+  }
+
+  retiroTemporal(){
+    let tagIcono = this.iconoTemporalElement.nativeElement;
+    let tagFecha = this.fechaReingresoElement.nativeElement;
+
+    if(this.esRetiroTemporal == false){
+      this.esRetiroTemporal = true;      
+      tagFecha.classList.remove('invisible'); 
+      tagIcono.classList.remove('colorGray');
+      tagIcono.classList.add('colorGreen');
+    }else{
+      this.esRetiroTemporal = false; 
+      tagIcono.classList.remove('colorGreen');
+      tagFecha.classList.add('invisible');
+      tagIcono.classList.add('colorGray');
+      this.itemForm.controls.fecha.setValue(null);
+    }
+
+    if(this.data.recibir == true){
+      this.itemForm.controls.concepto.setValue('Inclusión de mercadería');
+    }else if(this.esRetiroTemporal == true){
+      this.itemForm.controls.concepto.setValue('Retiro TEMPORAL de mercadería');
+    }else{
+      this.itemForm.controls.concepto.setValue('Retiro de mercadería');
+    }
   }
 
 }

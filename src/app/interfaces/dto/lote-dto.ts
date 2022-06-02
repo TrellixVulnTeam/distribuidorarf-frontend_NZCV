@@ -6,4 +6,6 @@ export interface LoteDto {
     fase: number;
     costoTotal: number;
     cantidadTotal: number;
+    moneda: string;
+    tipoCambio: number;
 }

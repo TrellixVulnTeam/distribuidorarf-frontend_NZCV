@@ -16,6 +16,11 @@
                 <input matInput placeholder="Precio Total" [(ngModel)]="data.precioTotal" type="number" [min]="0">
             </mat-form-field>
         </div>    
+        <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+            <mat-form-field>
+                <input matInput placeholder="Composición" [(ngModel)]="data.composicion" type="text">
+            </mat-form-field>
+        </div>    
     </div>    
 </div>
 <div mat-dialog-actions>

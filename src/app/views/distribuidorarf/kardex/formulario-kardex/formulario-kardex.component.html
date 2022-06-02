@@ -1,11 +1,26 @@
-<h1 matDialogTitle>{{data.title}}</h1>
+<h1 matDialogTitle>{{data.title}} <span class="material-icons colorGray" style="float: right;" (click)="retiroTemporal()" #iconoTemporalElement>timer</span></h1>
+<h3 style="color: darkblue;">{{mensaje}}</h3>
 <form [formGroup]="itemForm" (ngSubmit)="submit()">
     <div fxLayout="row wrap" fxLayout.lt-sm="column">     
-        <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
+        <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
             <mat-form-field style="width: 100%;">
               <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
-            </mat-form-field>          
+            </mat-form-field>                      
         </div>   
+        <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16 invisible" #fechaReingresoElement>
+            <mat-form-field class="full-width">                
+                <input 
+                matInput
+                name="fecha"
+                formControlName="fecha"
+                placeholder="Fecha de Re-Ingreso" 
+                [matDatepicker]="appDatepicker"                  
+                >
+                
+            <mat-datepicker-toggle matSuffix [for]="appDatepicker"></mat-datepicker-toggle>
+            </mat-form-field>
+            <mat-datepicker #appDatepicker></mat-datepicker>                
+        </div>
         <div fxFlex="33"  class="pr-16">            
             <mat-form-field style="width: 100%;">
                 <input matInput placeholder="{{'CODE' | translate}}" formControlName="idProducto">
@@ -33,7 +48,7 @@
         </div> 
         <div fxFlex="50"  class="pr-16">
             <mat-form-field style="width: 100%;">
-                <input matInput placeholder="{{'CANTIDAD' | translate}} *" formControlName="cantidad" type="number" [min]="0">
+                <input matInput placeholder="{{'CANTIDAD' | translate}} *" formControlName="cantidad" type="number" [min]="1" [max]="maxCant">
             </mat-form-field>
         </div>
         <div fxFlex="100"  class="pr-16">

@@ -7,12 +7,10 @@ import { Categoria } from 'app/interfaces/categoria';
 import { GproductoDto } from 'app/interfaces/dto/gproducto-dto';
 import { Token } from 'app/interfaces/token';
 import { CategoriasService } from 'app/services/categorias.service';
-import { GaleriaProductosService } from 'app/services/galeria-productos.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { egretAnimations } from 'app/shared/animations/egret-animations';
 import { Product } from 'app/shared/models/product.model';
 import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
-import { environment } from 'environments/environment';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { CartItem, ShopService } from '../shop.service';
@@ -65,9 +63,7 @@ export class ProductosComponent implements OnInit {
       .getFilteredProduct(this.filterForm)
       .pipe(
         map(products => {
-          this.loader.close(); 
-          console.log("PRODUCTOS");         
-          console.log(products);
+          this.loader.close();           
           return products;
         })
       );  

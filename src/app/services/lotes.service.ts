@@ -13,6 +13,7 @@ export class LotesService {
   BASE_URL: string = environment.BASE_URL;
   entity: string = environment.SERVICE_LOTES;
 
+
   constructor(
     private http: HttpClient
   ) { }

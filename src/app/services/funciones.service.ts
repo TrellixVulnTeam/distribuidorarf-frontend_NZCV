@@ -35,4 +35,9 @@ export class FuncionesService {
     let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
     return this.http.get<Persona[]>(`${this.BASE_URL}/${this.entity}/obtenerEmpleados`,{headers: heads});
   }
+
+  exportarExcel(token: string, codigoLote: number): Observable<any>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
+    return this.http.get<Persona[]>(`${this.BASE_URL}/${this.entity}/loteExportar/${codigoLote}`,{headers: heads});
+  }
 }

@@ -1,20 +1,23 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { Product } from 'app/shared/models/product.model';
 import { ProductosService } from 'app/services/productos.service';
 import { Producto } from 'app/interfaces/producto';
 import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserApiService } from 'app/services/user-api.service';
 import { Token } from 'app/interfaces/token';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { DetalleProductoLotePopupComponent } from './detalle-producto-lote-popup/detalle-producto-lote-popup.component';
-import { DetalleLote } from 'app/interfaces/detalle-lote';
 import { DetalleLoteDto } from 'app/interfaces/dto/detalle-lote-dto';
 import { LoteDto } from 'app/interfaces/dto/lote-dto';
 import { LotesService } from 'app/services/lotes.service';
 import { Lote } from 'app/interfaces/lote';
+import { DetallesLoteService } from 'app/services/detalles-lote.service';
+import { Router } from '@angular/router';
+import { Persona } from 'app/interfaces/persona';
+import { FuncionesService } from 'app/services/funciones.service';
+import { CreacionRapidaProductoComponent } from '../../productos/creacion-rapida-producto/creacion-rapida-producto.component';
 
 @Component({
   selector: 'app-formulario-lotes',
@@ -32,6 +35,9 @@ export class FormularioLotesComponent implements OnInit {
   cantidadTotal: number = 0;
   costoTotal: number = 0;
   fase: string = 'Nuevo';
+  listaEmpleados: Persona[] = [];
+  moneda: string = "CRC";
+  tipoCambio: number = 0;
 
   lote: LoteDto = {
     cantidadTotal: null,
@@ -40,7 +46,9 @@ export class FormularioLotesComponent implements OnInit {
     costoTotal: null,
     descripcion: null,
     fase: null,
-    fecha: null
+    fecha: null,
+    moneda: null,
+    tipoCambio: null
   }
 
   loteInsertado: Lote = {
@@ -53,7 +61,9 @@ export class FormularioLotesComponent implements OnInit {
     fase: null,
     fecha: null,
     fechaCreacion: null,
-    fechaUltimaModificacion: null
+    fechaUltimaModificacion: null,
+    moneda: null,
+    tipoCambio: null
   }
 
   tokenUserApi: Token = {
@@ -66,8 +76,11 @@ export class FormularioLotesComponent implements OnInit {
     private loader: AppLoaderService,
     private snack: MatSnackBar,        
     private userApiService: UserApiService,
-    public dialog: MatDialog,
-    public lotesService: LotesService
+    private dialog: MatDialog,
+    private lotesService: LotesService,
+    private detallesLoteService: DetallesLoteService,
+    private route: Router,
+    private funcionesService: FuncionesService
   ) { }
 
   ngOnInit(): void {
@@ -77,6 +90,7 @@ export class FormularioLotesComponent implements OnInit {
       res => {
           this.tokenUserApi = res;                           
           this.loadProducts();    
+          this.cargarEmpleados();
       },
       err => {
           this.snack.open(err.message, "ERROR", { duration: 4000 });
@@ -86,13 +100,8 @@ export class FormularioLotesComponent implements OnInit {
 
   buildItemForm(item){
     this.datosInicialesForm = this.fb.group({            
-      // idProducto: [item.idProducto || '', Validators.required],
-      // codigoExterno: [item.codigoExterno || '', Validators.required],
-      // nombre: [item.name || '', Validators.required],
       descripcion: [item.descripcion || '', Validators.required],
       fechaLote: [item.fecha || '', [Validators.required]],
-      // cantidadExistencias: [item.cantidadExistencias || 0],
-      // cantidadMinima: [item.cantidadMinima || 0],
       autorizacionEmpleado: ['', Validators.required]
     });
   }
@@ -111,6 +120,8 @@ export class FormularioLotesComponent implements OnInit {
   }
 
   loadProducts(){
+    this.items = [];
+    this.temp = [];
     this.productosService.getAll(this.tokenUserApi.access_token).subscribe(
       res => {
         this.items = this.temp = res;
@@ -127,14 +138,13 @@ export class FormularioLotesComponent implements OnInit {
     var columns = Object.keys(this.temp[0]);
     // Removes last "$$index" from "column"
     columns.splice(columns.length - 1);    
-    // console.log(columns);
+    
     if (!columns.length)
       return;
 
     const rows = this.temp.filter(function(d) {
       for (let i = 0; i <= columns.length; i++) {
         let column = columns[i];
-        // console.log(d[column]);
         if (d[column] && d[column].toString().toLowerCase().indexOf(val) > -1) {
           return true;
         }
@@ -149,14 +159,12 @@ export class FormularioLotesComponent implements OnInit {
     var columns = Object.keys(this.tempLot[0]);
     // Removes last "$$index" from "column"
     columns.splice(columns.length - 1);    
-    // console.log(columns);
     if (!columns.length)
       return;
 
     const rows = this.tempLot.filter(function(d) {
       for (let i = 0; i <= columns.length; i++) {
         let column = columns[i];
-        // console.log(d[column]);
         if (d[column] && d[column].toString().toLowerCase().indexOf(val) > -1) {
           return true;
         }
@@ -169,6 +177,7 @@ export class FormularioLotesComponent implements OnInit {
   cantidad: number = 0;
   precioUnitario: number = 0;
   precioTotal: number = 0;
+  compocision: string = '';
 
   addToLot(data: any = {}){    
     let product = data;
@@ -176,7 +185,7 @@ export class FormularioLotesComponent implements OnInit {
     let tempListItems: Producto[] = [];   
     
     const dialogRef = this.dialog.open(DetalleProductoLotePopupComponent, {      
-      data: {cantidad: this.cantidad, precioUnitario: this.precioUnitario, precioTotal: this.precioTotal}
+      data: {cantidad: this.cantidad, precioUnitario: this.precioUnitario, precioTotal: this.precioTotal, compocicion: this.compocision}
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -184,11 +193,9 @@ export class FormularioLotesComponent implements OnInit {
         // If user press cancel
         return;
       }
-
       // // actualiza cantidad de productos y precio total
       this.cantidadTotal = this.cantidadTotal + result.cantidad;      
       this.costoTotal = this.costoTotal + result.precioTotal;
-      
       
       this.items.forEach(element => {
         if(element.idProducto != product.idProducto){
@@ -203,17 +210,17 @@ export class FormularioLotesComponent implements OnInit {
 
       // Creo un obejto de tipo Detalle Lote DTO 
       let detalleInsertar: DetalleLoteDto = {
+        idDetalleLote: null,
         descripcion: product.nombre,
-        composicion: null,
+        composicion: result.composicion,
         costo: result.precioUnitario,
         cantidad: result.cantidad,
         precioTotal: result.precioTotal,
         producto: product.idProducto,
         codigoResponsable: this.datosInicialesForm.controls.autorizacionEmpleado.value,
-        lote: null        
+        lote: null,
+        cantidadAsignada: null        
       }
-
-      console.log(detalleInsertar);
   
       tempList.push(detalleInsertar);
       
@@ -225,8 +232,6 @@ export class FormularioLotesComponent implements OnInit {
           tempList.push(element);
         }           
       });    
-
-      console.log(tempList);
   
       this.itemsLote = tempList;
     });    
@@ -238,12 +243,10 @@ export class FormularioLotesComponent implements OnInit {
     let tempLotList: DetalleLoteDto[] = [];    
     let detalleEliminar: DetalleLoteDto;
 
-    let product = this.itemsProductoEnLote.find(x => x.idProducto === lote.producto);
-    console.log(product);
+    let product = this.itemsProductoEnLote.find(x => x.idProducto === lote.producto);    
 
     // -- Remove product from itemsProductoEnLote    
     this.itemsProductoEnLote.splice(this.itemsProductoEnLote.findIndex(x => x.idProducto === lote.product));
-    console.log(this.itemsProductoEnLote);
 
     // Remove the product from lot list
     this.itemsLote.forEach(element => {
@@ -272,33 +275,96 @@ export class FormularioLotesComponent implements OnInit {
   }
 
   submit(){
-    this.crearLote();
-    this.lotesService.newRow(this.tokenUserApi.access_token, this.lote).subscribe(
-      res => {
-        this.loteInsertado = res;
-        this.actualizaDetallesLote(this.loteInsertado.codigoLote);
-      },
-      err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );
+    if(this.empleadoConAutrizacion(this.datosInicialesForm.controls.autorizacionEmpleado.value) != true){
+      this.snack.open("Código de autoriazión inválido.", "ERROR!!", { duration: 4000 }); 
+    }else{
+      this.crearLote();
+      this.lotesService.newRow(this.tokenUserApi.access_token, this.lote).subscribe(
+        res => {
+          this.loteInsertado = res;
+          this.actualizaDetallesLote(this.loteInsertado.codigoLote);
+        },
+        err => {
+          this.snack.open(err.message, "ERROR", { duration: 4000 });
+        }
+      );
+    }    
+  }
+
+  empleadoConAutrizacion(codigo){
+    let autorizado = false;    
+    this.listaEmpleados.forEach(element => {      
+      if(element.codigoAutorizacion === codigo){
+        autorizado = true;
+        return autorizado;
+      }      
+    });
+
+    return autorizado;
   }
 
   crearLote(){
     this.lote.cantidadTotal = this.cantidadTotal;
     this.lote.codigoResponsable = this.datosInicialesForm.controls.autorizacionEmpleado.value;
     this.lote.costoTotal = this.costoTotal;
-    this.lote.descripcion = this.datosInicialesForm.controls.autorizacionEmpleado.value;
+    this.lote.descripcion = this.datosInicialesForm.controls.descripcion.value;
     this.lote.fase = this.fase == 'Nuevo' ? 1 : -1;    
-    this.lote.fecha = this.datosInicialesForm.controls.fecha.value;
+    this.lote.fecha = this.datosInicialesForm.controls.fechaLote.value;
+    this.lote.moneda = this.moneda;
+    this.lote.tipoCambio = this.tipoCambio;
+  }
+
+  cargarEmpleados(){
+    this.funcionesService.obtenerEmpleados(this.tokenUserApi.access_token).subscribe(
+      res => {
+        this.listaEmpleados = res;
+      },
+      err => {
+        this.snack.open(err.message, "ERROR", { duration: 4000 });
+      }
+    );
   }
 
   actualizaDetallesLote(codigoLote: number){
     let cantidadDetalles: number = this.itemsLote.length;
     let cantidadActual: number = 1;
+    
     this.itemsLote.forEach(element => {
       element.lote = codigoLote;      
+      element.idDetalleLote = codigoLote + element.producto;
+      console.log(element);
+      this.detallesLoteService.newRow(this.tokenUserApi.access_token, element).subscribe(
+        res => {
+          if(cantidadActual === cantidadDetalles){
+            this.route.navigateByUrl('/distribuidorarf/lots');  
+          }
+          cantidadActual += 1;
+        },
+        err => {
+          this.snack.open(err.message, "ERROR", { duration: 4000 });
+        }
+      );            
     });
+  }
+
+  crearProductoRapido(data: any){
+    let title: string = "Creación Rápida de Producto";
+    let dialogRef: MatDialogRef<any> = this.dialog.open(CreacionRapidaProductoComponent, {
+      maxWidth: '80vw',
+      maxHeight: '90vh',
+      disableClose: true,
+      data: { title: title, payload: data }
+    });
+    dialogRef.afterClosed()
+      .subscribe(res => {
+        if(!res) {
+          // If user press cancel
+          return;
+        }else{
+          this.loadProducts();
+        }
+      }
+    );
   }
 
 }

@@ -11,10 +11,10 @@ export const environment = {
   //BASE_URL: 'https://distribuidorarf.azurewebsites.net',  
   BASE_URL: 'http://localhost:8000',  
   //BASE_URL: 'https://distribuidorarf-dev.herokuapp.com',    
-  SERVICE_LOGIN_API: 'auth/login',
-  SERVICE_PRODUCTOS: 'productos',
+  SERVICE_LOGIN_API: 'auth/login',  
   API_USER: '$2a$10$DxmWIbRRh7XfGuMUPG3NWuPa0Km.SGB1xZX10h8rbSrDsLxtSjSDu',
   API_PASS: '$2a$10$IJUBNcP/iErqDeAErUK4geppyO8pw2ua6maopcRKFh5MFYG1qY9Ri',
+  SERVICE_PRODUCTOS: 'productos',
   SERVICE_PROVINCIAS: 'provincias',
   SERVICE_CANTONES: 'cantones',
   SERVICE_TIPOS_IDENTIFICACION: 'tipos-identificacion',
@@ -25,6 +25,8 @@ export const environment = {
   SERVICE_CATEGORIAS: "categorias",
   SERVICE_MARCAS: "marcas",  
   SERVICE_LOTES: 'lotes',
+  SERVICE_DETALLE_LOTES: 'detalle-lotes',
+  SERVICE_DETALLES_PRODUCTOS_LOTE: 'detalles-productos-lotes',
   SERVICE_PROVEEDORES: "proveedores",
   SERVICE_PRECIOS_PRODUCTO: "precios-productos",
   SERVICE_DETALLES_PRODUCTO: "detalles-productos",
@@ -34,5 +36,6 @@ export const environment = {
   AZURECONTAINERNAME: 'productos',
   SERVICE_GALERIA_PRODUCTO: "galeria-productos",
   SERVICE_KARDEX: "kardex",
+  SERVICE_PROCEDIMIENTOS_DB: "procedimientos-db",
   ADMIN: 3
 };
