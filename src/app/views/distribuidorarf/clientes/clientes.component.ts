@@ -13,6 +13,11 @@ import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.serv
 import { Subscription } from 'rxjs';
 import { ClientePopupComponent } from './cliente-popup/cliente-popup.component';
 import * as XLSX from 'xlsx';
+import { ErrorBk } from 'app/interfaces/error-bk';
+import { StringManager } from 'app/managers/string-manager';
+import { ServiceManager } from 'app/managers/service-manager';
+import { environment } from 'environments/environment';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
 
 @Component({
   selector: 'app-clientes',
@@ -25,9 +30,17 @@ export class ClientesComponent implements OnInit, OnDestroy {
   public temp = [];
   public getItemSub: Subscription;
 
-  tokenUserApi: Token = {
+  token: Token = {
     access_token: ``
   }
+
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
 
   personaDTO: PersonaDto = {
     identificacion: null,
@@ -55,7 +68,8 @@ export class ClientesComponent implements OnInit, OnDestroy {
     tipoPersona: null,
     usuario: null,
     otrasSenas: null,
-    codigoResponsable: null
+    codigoResponsable: null,
+    precio: null
   }
 
   columns = [{ prop: 'nombre' }, { name: 'ID' }, { name: 'apellidos' }, { name: 'maxCredito' }];
@@ -66,21 +80,13 @@ export class ClientesComponent implements OnInit, OnDestroy {
     private loader: AppLoaderService,
     private snack: MatSnackBar,    
     private personasService: PersonaService,
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private confirmService: AppConfirmService,
   ) {         
   }
 
   ngOnInit() {    
-    this.userApiService.login().subscribe(
-      res => {
-          this.tokenUserApi = res;                           
-          this.getItems();    
-      },
-      err => {
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );    
+    this.getItems();
   }
   ngOnDestroy() {
     if (this.getItemSub) {
@@ -88,15 +94,14 @@ export class ClientesComponent implements OnInit, OnDestroy {
     }    
   }
   getItems() {
-    this.loader.open();
-    this.personasService.getAll(this.tokenUserApi.access_token).subscribe(
+    this.loader.open();    
+    this.personasService.getAll().subscribe(
       res => {
         this.items = this.temp = res;
-        console.log(res);
         this.loader.close();
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.getItems);
       }
     );
   }
@@ -116,25 +121,25 @@ export class ClientesComponent implements OnInit, OnDestroy {
         }
         this.loader.open();
         if (isNew) {
-          this.personasService.getAll(this.tokenUserApi.access_token).subscribe(
+          this.personasService.getAll().subscribe(
             res => {
               this.items = res;
               this.loader.close();
               this.snack.open("El cliente fue creado con éxito", "ÉXITO", { duration: 4000 });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUp, data, isNew);
             }
           );
         } else {          
-          this.personasService.getAll(this.tokenUserApi.access_token).subscribe(
+          this.personasService.getAll().subscribe(
             res => {
               this.items = res;
               this.loader.close();
               this.snack.open("El cliente fue editado con éxito", "ÉXITO", { duration: 4000 });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUp, data, isNew);
             }
           );          
         }
@@ -167,15 +172,14 @@ export class ClientesComponent implements OnInit, OnDestroy {
           this.personaDTO.tipoIdentificacion = row.tipoIdentificacion.idTipoIdetificacion;
           this.personaDTO.codigoAutorizacion = row.codigoAutorizacion;
 
-          this.personasService.update(this.tokenUserApi.access_token, this.personaDTO.identificacion, this.personaDTO).subscribe(
+          this.personasService.update(this.personaDTO.identificacion, this.personaDTO).subscribe(
             res => {
               this.snack.open('Cliente desactivado!', 'OK', { duration: 4000 })
               this.getItems();
               this.loader.close();
             },
             err => {
-              console.log(err);
-              this.snack.open(err.message, "ERROR", { duration: 4000 });                                     
+              this.reintento(err, nombresMetodos.deleteItem, row); 
             }
           );
 
@@ -228,4 +232,47 @@ export class ClientesComponent implements OnInit, OnDestroy {
  
   }
 
+  reintento(err: any, metodo: string, data?: any, isNew?: boolean, url?: string, id?: number){    
+    this.error = err.error;
+    console.log(this.error);
+    if(this.intentos == this.serviceManager.MAX_INTENTOS){
+      this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+    }else{
+      if(this.error.statusCode == 401){
+        this.intentos += 1;
+        this.tokenService.login().subscribe(
+          res => {
+              this.token = res;
+              LocalStorageManger.setToken(this.token.access_token);
+              this.intentos = 1;
+              if(metodo === nombresMetodos.getItems){
+                this.getItems();
+              }else if(metodo === nombresMetodos.openPopUp){
+                this.openPopUp(data, isNew);
+              }else if(metodo === nombresMetodos.deleteItem){
+                this.deleteItem(data);
+              }else{
+                this.snack.open(this.strings.error_mgs_metodo_no_encontrado + metodo, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+          },
+          err => {
+            this.intentos = 1;
+            this.loader.close(); 
+            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        );              
+      }else{
+        this.intentos = 1;
+        this.loader.close();
+        this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+      }
+    }
+  }
+
+}
+
+enum nombresMetodos {  
+  getItems = 'getItems',
+  openPopUp = 'openPopUp',
+  deleteItem = 'deleteItem',
 }

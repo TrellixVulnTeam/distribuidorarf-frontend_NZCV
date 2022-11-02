@@ -7,6 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Canton } from 'app/interfaces/canton';
 import { Distrito } from 'app/interfaces/distrito';
 import { PersonaDto } from 'app/interfaces/dto/persona-dto';
+import { ErrorBk } from 'app/interfaces/error-bk';
 import { Persona } from 'app/interfaces/persona';
 import { Provincia } from 'app/interfaces/provincia';
 import { Termino } from 'app/interfaces/termino';
@@ -14,6 +15,8 @@ import { TipoIdentificacion } from 'app/interfaces/tipo-identificacion';
 import { TipoPersona } from 'app/interfaces/tipo-persona';
 import { Token } from 'app/interfaces/token';
 import { UserApi } from 'app/interfaces/user-api';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { StringManager } from 'app/managers/string-manager';
 import { CantonesService } from 'app/services/cantones.service';
 import { FuncionesService } from 'app/services/funciones.service';
 import { NotificacionesService } from 'app/services/notificaciones.service';
@@ -24,6 +27,7 @@ import { TiposIdentificacionService } from 'app/services/tipos-identificacion.se
 import { TiposPersonaService } from 'app/services/tipos-persona.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { environment } from 'environments/environment';
+import { env } from 'process';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -49,10 +53,13 @@ declare const $: any;
   ]
 })
 export class ClientePopupComponent implements OnInit {
+
+  strings = StringManager;
   public itemForm: FormGroup;
   public secondFormGroup: FormGroup;
   public thirdFormGroup: FormGroup;
   isLinear = false;  
+  precios = [{nombre: 'Precio 1', valor: 1},{nombre: 'Precio 2', valor: 2},{nombre: 'Precio 3', valor: 3},{nombre: 'Precio 4', valor: 4}];
 
   //-- para el mapa --
   zoom = 17;
@@ -108,8 +115,14 @@ export class ClientePopupComponent implements OnInit {
     tipoPersona: null,
     usuario: null,
     otrasSenas: null,
-    codigoResponsable: null
+    codigoResponsable: null,
+    precio: null
   }
+
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
 
   personaDTO: PersonaDto = {
     identificacion: null,
@@ -137,7 +150,8 @@ export class ClientePopupComponent implements OnInit {
     tipoPersona: null,
     usuario: null,
     otrasSenas: null,
-    codigoResponsable: null
+    codigoResponsable: null,
+    precio: null
   }
 
   provinciaNueva: Provincia = {
@@ -189,6 +203,7 @@ export class ClientePopupComponent implements OnInit {
   tiposPersona: TipoPersona[] = [];
   esEditar: boolean = false;
 
+
   validaPersona: contador = {
     clienteexiste: null
   };
@@ -197,13 +212,13 @@ export class ClientePopupComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: any,
     public dialogRef: MatDialogRef<ClientePopupComponent>,
     private fb: FormBuilder,
-    private userApiService: UserApiService,
     private snack: MatSnackBar,
     private provinciasService: ProvinciasService,
     private notificacionesService: NotificacionesService,
     private cantonesService: CantonesService,
     private tiposIdentificacionService: TiposIdentificacionService,
     private mapsAPILoader: MapsAPILoader, 
+    private userApiService: UserApiService,
     private ngZone: NgZone,
     private terminosService: TerminosService,
     private tiposPersonaService: TiposPersonaService,
@@ -237,51 +252,43 @@ export class ClientePopupComponent implements OnInit {
           })
         });
       });
-    });
+    });    
     this.buildItemForm(this.data.payload);
-    this.userApiService.login().subscribe(
-      res => {          
-          this.tokenUserApi = res;       
-          this.cargarEmpleados();                    
-          this.cargarProvincias();                        
-          this.cargarTiposIdentificacion();
-          this.cargarTerminos();          
-
-          if(this.data.payload.identificacion != '' && this.data.payload.identificacion != null){      
+    this.cargarEmpleados();                    
+    this.cargarProvincias();                        
+    this.cargarTiposIdentificacion();
+    this.cargarTerminos(); 
+    
+    if(this.data.payload.identificacion != '' && this.data.payload.identificacion != null){      
             
-            this.personaDTO.tipoIdentificacion = this.data.payload.tipoIdentificacion.idTipoIdetificacion;
-            this.provincia = this.data.payload.distrito.canton.provincia;
-            this.cambiaSeleccionProvincia(this.provincia.cod);
-            this.canton = this.data.payload.distrito.canton;
-            this.cambiaSeleccionCanton(this.canton.idCanton);            
-            this.distrito = this.data.payload.distrito;    
-            this.distrito.codDistrito = this.data.payload.distrito.codDistrito;    
-            console.log(this.distrito.codDistrito);
-            this.cambiaSeleccionDistrito(this.distrito.codDistrito);            
-            
-            this.termino.idTermino = this.data.payload.termino.idTermino;
+      this.personaDTO.tipoIdentificacion = this.data.payload.tipoIdentificacion.idTipoIdetificacion;
+      this.provincia = this.data.payload.distrito.canton.provincia;
+      this.cambiaSeleccionProvincia(this.provincia.cod);
+      this.canton = this.data.payload.distrito.canton;
+      this.cambiaSeleccionCanton(this.canton.idCanton);            
+      this.distrito = this.data.payload.distrito;    
+      this.distrito.codDistrito = this.data.payload.distrito.codDistrito;    
+      console.log(this.distrito.codDistrito);
+      this.cambiaSeleccionDistrito(this.distrito.codDistrito);            
+      
+      this.termino.idTermino = this.data.payload.termino.idTermino;
 
-            this.esEditar = true;
-            this.cargarTiposPersona();
-            // this.personaDTO.tipoPersona = this.data.payload.termino.idTipoPersona;            
+      this.esEditar = true;
+      this.cargarTiposPersona();
+      // this.personaDTO.tipoPersona = this.data.payload.termino.idTipoPersona;            
 
-            this.mapCenter.lat = this.data.payload.latLongDireccion.split(',')[0];
-            this.mapCenter.lng = this.data.payload.latLongDireccion.split(',')[1];
+      this.mapCenter.lat = this.data.payload.latLongDireccion.split(',')[0];
+      this.mapCenter.lng = this.data.payload.latLongDireccion.split(',')[1];
 
-            this.markers.push({
-              lat: this.data.payload.latLongDireccion.split(',')[0],
-              lng: this.data.payload.latLongDireccion.split(',')[1],
-              draggable: true
-            });             
-          }      
-      },
-      err => {
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );    
+      this.markers.push({
+        lat: this.data.payload.latLongDireccion.split(',')[0],
+        lng: this.data.payload.latLongDireccion.split(',')[1],
+        draggable: true
+      });             
+    }     
   }
 
-  buildItemForm(item) {            
+  buildItemForm(item) {                
     this.itemForm = this.fb.group({      
       identificacion: [item.identificacion || '', Validators.required],
       nombre: [item.nombre || '', Validators.required],
@@ -294,7 +301,7 @@ export class ClientePopupComponent implements OnInit {
       codigoAutorizacion: [item.codigoAutorizacion || ''],
       estaActivo: [item.estaActivo || false],
       fechaCumpleanos: [item.fechaCumpleannos || '', [Validators.required]],
-      autorizacionEmpleado: ['', Validators.required]   
+      autorizacionEmpleado: ['', Validators.required]         
     });
     this.secondFormGroup = this.fb.group({
       direccion: [item.direccion || ''],
@@ -302,36 +309,68 @@ export class ClientePopupComponent implements OnInit {
       maxCredito: [item.maxCredito || 0],
       saldoFavor: [item.saldoFavor || 0],
       googleSearch: [''],
-      otrasSenas: [item.otrasSenas || ''] 
+      otrasSenas: [item.otrasSenas || ''],
+      precio: [item.precio || 1]
     });
     this.thirdFormGroup = this.fb.group({
       telefonoRef: [item.telefonoRef || ''],
       contactoRef: [item.contactoRef || '']      
     });
+
   }
 
   cargarProvincias(){  
-    this.provinciasService.getAll(this.tokenUserApi.access_token).subscribe(
+    this.provinciasService.getAll().subscribe(
       res => {
           this.provincias = res;                             
+      },
+      err => {
+        this.error = err.error;
+        if(this.error.statusCode == 401){
+          this.userApiService.login().subscribe(
+            res => {
+                this.tokenUserApi = res;
+                LocalStorageManger.setToken(this.tokenUserApi.access_token);
+                this.cargarProvincias();
+            },
+            err => {
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          );              
+        }else{
+          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }        
       }
     );    
   }
 
   cargarTiposIdentificacion(){     
-    this.tiposIdentificacionService.getAll(this.tokenUserApi.access_token).subscribe(
+    this.tiposIdentificacionService.getAll().subscribe(
       res => {
         this.tiposIdentificacion = res;                    
       },
       err => {
-        console.log(err);
-        this.notificacionesService.mostrarNotificacionError("<strong>ERROR!!!</strong>", err.message);         
+        this.error = err.error;
+        if(this.error.statusCode == 401){
+          this.userApiService.login().subscribe(
+            res => {
+                this.tokenUserApi = res;
+                LocalStorageManger.setToken(this.tokenUserApi.access_token);
+                this.cargarTiposIdentificacion();
+            },
+            err => {
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          );              
+        }else{
+          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }
       }
     );    
   }
 
   cargarTiposPersona(){     
-    this.tiposPersonaService.getAll(this.tokenUserApi.access_token).subscribe(
+    this.tiposPersonaService.getAll().subscribe(
       res => {
         this.tiposPersona = res;                
         console.log(this.data.payload.tipoPersona.idTipoPersona);
@@ -346,43 +385,69 @@ export class ClientePopupComponent implements OnInit {
         }        
       },
       err => {
-        console.log(err);
-        this.notificacionesService.mostrarNotificacionError("<strong>ERROR!!!</strong>", err.message);         
+        this.error = err.error;
+        if(this.error.statusCode == 401){
+          this.userApiService.login().subscribe(
+            res => {
+                this.tokenUserApi = res;
+                LocalStorageManger.setToken(this.tokenUserApi.access_token);
+                this.cargarTiposPersona();
+            },
+            err => {
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          );              
+        }else{
+          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }
       }
     );    
   }
 
   cargarTerminos(){          
-    this.terminosService.getAll(this.tokenUserApi.access_token).subscribe(
+    this.terminosService.getAll().subscribe(
       res => {
         this.terminos = res;                    
       },
       err => {
-        console.log(err);
-        this.notificacionesService.mostrarNotificacionError("<strong>ERROR!!!</strong>", err.message);         
+        this.error = err.error;
+        if(this.error.statusCode == 401){
+          this.userApiService.login().subscribe(
+            res => {
+                this.tokenUserApi = res;
+                LocalStorageManger.setToken(this.tokenUserApi.access_token);
+                this.cargarTerminos();
+            },
+            err => {
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          );              
+        }else{
+          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }
       }
     );    
   }
 
   cambiaSeleccionProvincia(idProvincia){            
-        this.provinciasService.getOne(idProvincia, this.tokenUserApi.access_token).subscribe(
-          res => {            
-            this.provinciaNueva = res;                                      
-            this.cantones = [];
-            this.distritos = [];      
-            // this.distrito.codDistrito = 0;            
-            this.provinciaNueva.cantones.forEach(element => {              
-              this.cantones.push(element);
-            });
-          },
-          err => {
-            this.notificacionesService.mostrarNotificacionError("<stong>ERROR!!!</strong>", err.message);            
-          }
-        );      
+    this.provinciasService.getOne(idProvincia).subscribe(
+      res => {            
+        this.provinciaNueva = res;                                      
+        this.cantones = [];
+        this.distritos = [];      
+        // this.distrito.codDistrito = 0;            
+        this.provinciaNueva.cantones.forEach(element => {              
+          this.cantones.push(element);
+        });
+      },
+      err => {
+        this.notificacionesService.mostrarNotificacionError("<stong>ERROR!!!</strong>", err.message);            
+      }
+    );      
   }
 
   cambiaSeleccionCanton(idCanton){        
-    this.cantonesService.getCanton(idCanton, this.tokenUserApi.access_token).subscribe(
+    this.cantonesService.getCanton(idCanton).subscribe(
       res => {
         this.distritos = [];
         // this.distrito.codDistrito = 0;
@@ -391,8 +456,7 @@ export class ClientePopupComponent implements OnInit {
           this.distritos.push(element);
         });
       },
-      err => {
-        console.log(err);
+      err => {        
         this.notificacionesService.mostrarNotificacionError("<stong>ERROR!!!</strong>", err.message);             
       }
     );    
@@ -466,7 +530,6 @@ export class ClientePopupComponent implements OnInit {
   }
 
   submit() {
-
     if(this.empleadoConAutrizacion()){
       this.personaDTO.identificacion = this.itemForm.controls.identificacion.value;
       this.personaDTO.nombre = this.itemForm.controls.nombre.value;
@@ -488,41 +551,41 @@ export class ClientePopupComponent implements OnInit {
       this.personaDTO.otrasSenas = this.secondFormGroup.controls.otrasSenas.value;
       this.personaDTO.codigoAutorizacion = this.data.payload.codigoAutorizacion; 
       this.personaDTO.codigoResponsable = this.itemForm.controls.autorizacionEmpleado.value;
+      this.personaDTO.precio = this.secondFormGroup.controls.precio.value;
 
       if(this.esEditar){
-        this.personasService.update(this.tokenUserApi.access_token, this.personaDTO.identificacion, this.personaDTO).subscribe(
+        this.personasService.update(this.personaDTO.identificacion, this.personaDTO).subscribe(
           res => {          
             this.dialogRef.close(this.personaDTO);          
           },
           err => {
-            console.log(err); 
-            this.snack.open(err.message, "ERROR", { duration: 4000 });                   
+            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });                   
           }
         );
       }else{
-        this.funcionesService.validaClienteExiste(this.tokenUserApi.access_token, this.personaDTO.identificacion).subscribe(
+        this.funcionesService.validaClienteExiste(this.tokenUserApi.access_token).subscribe(
           res =>{
             this.validaPersona = res[0];        
             if(this.validaPersona.clienteexiste == 0){            
-              this.personasService.newRow(this.tokenUserApi.access_token, this.personaDTO).subscribe(
+              this.personasService.newRow(this.personaDTO).subscribe(
                 res => {                
                   this.dialogRef.close(this.personaDTO);
                 },
                 err => {
-                  this.snack.open(err.message, "ERROR", { duration: 4000 });                       
+                  this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });         
                 }
               );          
             }else{
-              this.snack.open("El cliente ya existe", "Atención!!", { duration: 4000 });                   
+              this.snack.open(this.strings.cliente_msg_ya_existe, this.strings.atencion_title, { duration: environment.TIEMPO_NOTIFICACION });
             }
           },
           err =>{
-          this.snack.open(err.message, "ERROR", { duration: 4000 });         
+          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });         
           }
         );    
       }
     }else{
-      this.snack.open("El código de empleado no es correcto. Por favor validarlo y volver a intentarlo. Solo los administradores pueden modificar empleados", "ERROR", { duration: 4000 });         
+      this.snack.open(this.strings.error_codigo_empleado_msg_admin, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });         
     }        
   }
 
@@ -531,7 +594,6 @@ export class ClientePopupComponent implements OnInit {
   empleadoConAutrizacion(){
     let autorizado = false;    
     this.listaEmpleados.forEach(element => {
-      console.log(element.tipoPersona);
       if(element.codigoAutorizacion === this.itemForm.controls.autorizacionEmpleado.value){
         autorizado = true;
         return autorizado;
@@ -542,13 +604,26 @@ export class ClientePopupComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.tokenUserApi.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
-        this.listaEmpleados = res;
-        console.log(this.listaEmpleados);
+        this.listaEmpleados = res;        
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.error.statusCode == 401){
+          this.userApiService.login().subscribe(
+            res => {
+                this.tokenUserApi = res;
+                LocalStorageManger.setToken(this.tokenUserApi.access_token);
+                this.cargarEmpleados();
+            },
+            err => {
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          );              
+        }else{
+          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }        
       }
     );
   }

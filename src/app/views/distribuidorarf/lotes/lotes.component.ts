@@ -18,6 +18,12 @@ import { DetallesLoteService } from 'app/services/detalles-lote.service';
 import { DetalleLote } from 'app/interfaces/detalle-lote';
 import * as XLSX from 'xlsx';
 import { number } from 'ngx-custom-validators/src/app/number/validator';
+import { ErrorBk } from 'app/interfaces/error-bk';
+import { ServiceManager } from 'app/managers/service-manager';
+import { StringManager } from 'app/managers/string-manager';
+import { environment } from 'environments/environment';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
 
 @Component({
   selector: 'app-lotes',
@@ -44,28 +50,29 @@ export class LotesComponent implements OnInit {
     tipoCambio: null,
   }
 
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
+
   constructor(    
     public lotesService: LotesService,
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private snack: MatSnackBar,
     private dialog: MatDialog,
     private procedimientosdbService: ProcedimientosDbService,
     private funcionesService: FuncionesService,
     private procedimientosDBService: ProcedimientosDbService,
-    private detalleLoteServices: DetallesLoteService
+    private detalleLoteServices: DetallesLoteService,
+    private loader: AppLoaderService,
   ) { }
 
   ngOnInit(): void {
-    this.userApiService.login().subscribe(
-      res => {
-          this.token = res;
-          this.cargarLotes();
-          this.cargarEmpleados();
-      },
-      err => {
-          this.snack.open(err.message, "ERROR", { duration: 8000 });
-      }
-    ); 
+    this.cargarLotes();
+    this.cargarEmpleados();      
   }
 
   lotes: Lote[] = [];
@@ -80,7 +87,7 @@ export class LotesComponent implements OnInit {
     this.done = [];
     this.aduanas = [];
     this.finished = [];
-    this.lotesService.getAll(this.token.access_token).subscribe(
+    this.lotesService.getAll().subscribe(
       res => {
         this.lotes = res;
         this.lotes.forEach(element => {
@@ -96,7 +103,31 @@ export class LotesComponent implements OnInit {
         });
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 8000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.cargarLotes();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
   }
@@ -110,7 +141,7 @@ export class LotesComponent implements OnInit {
       }else if(fase == 2){      
         this.actualizarFase(event.previousContainer.data[event.previousIndex]['codigoLote'],2, event);       
       }else if(fase == 3){
-        this.detalleLoteServices.getAll(this.token.access_token, event.previousContainer.data[event.previousIndex]['codigoLote']).subscribe(
+        this.detalleLoteServices.getAll(event.previousContainer.data[event.previousIndex]['codigoLote']).subscribe(
           res => {
             this.detallesLote = res;
             let completado = true;
@@ -122,11 +153,35 @@ export class LotesComponent implements OnInit {
             if(completado){          
               this.actualizarFase(event.previousContainer.data[event.previousIndex]['codigoLote'],3, event);
             }else{
-              this.snack.open("No se puede actualizar la fase, falta completar productos: Todas las compras deben estar asiganadas a talles y colores de los productos.", "Cerrar", { duration: 8000 });
+              this.snack.open("No se puede actualizar la fase, falta completar productos: Todas las compras deben estar asiganadas a tallas y colores de los productos.", "Cerrar", { duration: 8000 });
             }
           },
           err => {
-            this.snack.open(err.message, "ERROR", { duration: 8000 });
+            this.error = err.error;
+            if(this.intentos == this.serviceManager.MAX_INTENTOS){
+              this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }else{
+              if(this.error.statusCode == 401){
+                this.intentos += 1;
+                this.tokenService.login().subscribe(
+                  res => {
+                      this.token = res;
+                      LocalStorageManger.setToken(this.token.access_token);
+                      this.intentos = 1;
+                      this.drop(event, fase);
+                  },
+                  err => {
+                    this.intentos = 1;
+                    this.loader.close(); 
+                    this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                  }
+                );              
+              }else{
+                this.intentos = 1;
+                this.loader.close();
+                this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            }
           }
         );            
       }else if(fase == 4){          
@@ -153,13 +208,37 @@ export class LotesComponent implements OnInit {
               this.snack.open("Código de autorización inválido.", "ERROR!!", { duration: 8000 }); 
             }else{
               alert(cLote);
-              this.procedimientosDBService.finalizaLote(this.token.access_token, cLote, result.value).subscribe(
+              this.procedimientosDBService.finalizaLote(cLote, result.value).subscribe(
                 res => {                  
                   this.actualizarFase(event2.previousContainer.data[event.previousIndex]['codigoLote'],4, event2);      
                   this.snack.open('Detalles Actualizados.', "ÉXITO!!", { duration: 8000 });
                 },
                 err => {
-                  this.snack.open(err.message, "ERROR", { duration: 8000 });
+                  this.error = err.error;
+                  if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                    this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                  }else{
+                    if(this.error.statusCode == 401){
+                      this.intentos += 1;
+                      this.tokenService.login().subscribe(
+                        res => {
+                            this.token = res;
+                            LocalStorageManger.setToken(this.token.access_token);
+                            this.intentos = 1;
+                            this.drop(event, fase);
+                        },
+                        err => {
+                          this.intentos = 1;
+                          this.loader.close(); 
+                          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                        }
+                      );              
+                    }else{
+                      this.intentos = 1;
+                      this.loader.close();
+                      this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                    }
+                  }
                 }
               );
             }
@@ -180,13 +259,37 @@ export class LotesComponent implements OnInit {
 
   actualizarFase(codigoLote, fase, event: CdkDragDrop<string[]>){
 
-    this.procedimientosdbService.actualizaFase(this.token.access_token, fase, codigoLote).subscribe(
+    this.procedimientosdbService.actualizaFase(fase, codigoLote).subscribe(
       res => {
         this.moverItem(event);
         this.snack.open("Fase actualizada!!!", "Cerrar", { duration: 8000 });                            
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 8000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.actualizarFase(codigoLote, fase, event);
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );    
   }
@@ -228,14 +331,38 @@ export class LotesComponent implements OnInit {
         if(this.empleadoConAutrizacion(result.value) != true){
           this.snack.open("Código de autorización inválido.", "ERROR!!", { duration: 8000 }); 
         }else{
-          this.procedimientosDBService.borrarLote(this.token.access_token, codigoLote).subscribe(
+          this.procedimientosDBService.borrarLote(codigoLote).subscribe(
             res => {
               let respuesta: string = res;
               this.cargarLotes();
               this.snack.open("Lote eliminado con éxito.", "ÉXITO!!!", { duration: 8000 }); 
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 8000 }); 
+              this.error = err.error;
+              if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }else{
+                if(this.error.statusCode == 401){
+                  this.intentos += 1;
+                  this.tokenService.login().subscribe(
+                    res => {
+                        this.token = res;
+                        LocalStorageManger.setToken(this.token.access_token);
+                        this.intentos = 1;
+                        this.borrarLote(codigoLote);
+                    },
+                    err => {
+                      this.intentos = 1;
+                      this.loader.close(); 
+                      this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                    }
+                  );              
+                }else{
+                  this.intentos = 1;
+                  this.loader.close();
+                  this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              }
             }
           );
         }
@@ -256,12 +383,36 @@ export class LotesComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.listaEmpleados = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 8000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.cargarEmpleados();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
   }
@@ -272,7 +423,7 @@ export class LotesComponent implements OnInit {
   {    
     this.listaDetalleLote = [];
     this.fileName = '';
-    this.funcionesService.exportarExcel(this.token.access_token, codigoLote).subscribe(
+    this.funcionesService.exportarExcel(codigoLote).subscribe(
       res => {
         this.listaDetalleLote = res;
         console.log(this.listaDetalleLote);
@@ -307,7 +458,31 @@ export class LotesComponent implements OnInit {
         })                    
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 8000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.exporttoexcel(codigoLote);
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
 

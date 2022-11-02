@@ -1,11 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ErrorBk } from 'app/interfaces/error-bk';
 import { Token } from 'app/interfaces/token';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { StringManager } from 'app/managers/string-manager';
 import { CategoriasService } from 'app/services/categorias.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { AppConfirmService } from 'app/shared/services/app-confirm/app-confirm.service';
 import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
+import { environment } from 'environments/environment';
 import { Subscription } from 'rxjs';
 import { CategoriaPopupComponent } from './categoria-popup/categoria-popup.component';
 
@@ -16,9 +20,14 @@ import { CategoriaPopupComponent } from './categoria-popup/categoria-popup.compo
 })
 export class CategoriasComponent implements OnInit {
 
+  strings = StringManager;
   public items: any[];
   public temp = [];
   public getItemSub: Subscription;
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
 
   tokenUserApi: Token = {
     access_token: ``
@@ -34,15 +43,7 @@ export class CategoriasComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.userApiService.login().subscribe(
-      res => {
-          this.tokenUserApi = res;                           
-          this.getItems();    
-      },
-      err => {
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );    
+    this.getItems();    
   }
 
   ngOnDestroy() {
@@ -53,13 +54,29 @@ export class CategoriasComponent implements OnInit {
 
   getItems(){
     this.loader.open();
-    this.categoriasService.getAll(this.tokenUserApi.access_token).subscribe(
+    this.categoriasService.getAll().subscribe(
       res => {
         this.items = this.temp = res;
         this.loader.close();
       },
-      err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+      err => {    
+        this.error = err.error;
+        if(this.error.statusCode == 401){
+          this.userApiService.login().subscribe(
+            res => {
+                this.tokenUserApi = res;
+                LocalStorageManger.setToken(this.tokenUserApi.access_token);
+                this.getItems();
+            },
+            err => {
+                this.loader.close();
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          );              
+        }else{
+          this.loader.close();
+          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }
       }
     );
   }
@@ -76,7 +93,7 @@ export class CategoriasComponent implements OnInit {
   }
 
   openPopUp(data: any = {}, isNew?) {
-    let title = isNew ? 'Agragar Categoría' : 'Modificar Categoría';
+    let title = isNew ? this.strings.categoria_agregar : this.strings.categoria_editar;
     let dialogRef: MatDialogRef<any> = this.dialog.open(CategoriaPopupComponent, {
       width: '1020px',
       disableClose: true,
@@ -90,25 +107,25 @@ export class CategoriasComponent implements OnInit {
         }
         this.loader.open();
         if (isNew) {
-          this.categoriasService.getAll(this.tokenUserApi.access_token).subscribe(
+          this.categoriasService.getAll().subscribe(
             res => {
               this.items = this.temp = res;
               this.loader.close();
-              this.snack.open("Categoría creada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.categoria_creada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.snack.open(err.message, this.strings.error_title , { duration: environment.TIEMPO_NOTIFICACION });
             }
           );
         } else {          
-          this.categoriasService.getAll(this.tokenUserApi.access_token).subscribe(
+          this.categoriasService.getAll().subscribe(
             res => {
               this.items = this.temp = res;
               this.loader.close();
-              this.snack.open("Categoría editada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.categoria_editada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.snack.open(err.message, this.strings.error_title , { duration: environment.TIEMPO_NOTIFICACION });
             }
           );          
         }
@@ -116,19 +133,18 @@ export class CategoriasComponent implements OnInit {
     }    
 
   deleteItem(row) {
-    this.confirmService.confirm({message: `Desea eliminar la categoría ${row.nombre} ?`})
+    this.confirmService.confirm({message: `${this.strings.categoria_pregunta_eliminar} ${row.nombre} ?`})
       .subscribe(res => {
         if (res) {
           this.loader.open();
-          this.categoriasService.delete(this.tokenUserApi.access_token, row.idCategoria).subscribe(
+          this.categoriasService.delete(row.idCategoria).subscribe(
             res => {
-              this.snack.open('Categoría eliminada correctamente!', 'OK', { duration: 4000 })
+              this.snack.open(this.strings.categoria_eliminada, this.strings.ok_title, { duration: environment.TIEMPO_NOTIFICACION })
               this.getItems();
               this.loader.close();
             },
             err => {
-              console.log(err);
-              this.snack.open(err.message, "ERROR", { duration: 4000 });                                     
+              this.snack.open(err.message, this.strings.error_title , { duration: environment.TIEMPO_NOTIFICACION });
             }
           );
         }

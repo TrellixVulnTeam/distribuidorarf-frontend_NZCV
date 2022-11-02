@@ -20,4 +20,5 @@ export interface Kardex {
     esRetiroTemporal: boolean;
     fechaReIngreso: Date;
     finalizadoReingreso: boolean;
+    detalleProforma: number;
 }

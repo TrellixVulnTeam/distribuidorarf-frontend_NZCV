@@ -4,7 +4,7 @@
         <div fxLayout="row wrap">
             <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                 <mat-form-field style="width: 100%;">
-                  <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+                  <input matInput placeholder="Autorización" formControlName="autorizacionEmpleado" type="password">
                 </mat-form-field>          
             </div>            
             <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">            
@@ -94,7 +94,7 @@
 </mat-card-content>
 <div style="clear: both;"></div>
 <div>    
-  <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancel</button>        
+  <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancelar</button>        
   <span fxFlex></span>
-  <button mat-raised-button color="primary" [disabled]="itemForm.invalid" (click)="submit()">{{"SAVE" | translate }}</button>          
+  <button mat-raised-button color="primary" [disabled]="itemForm.invalid" (click)="submit()">Guardar</button>          
 </div>

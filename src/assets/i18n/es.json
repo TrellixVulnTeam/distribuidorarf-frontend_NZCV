@@ -141,5 +141,7 @@
   "NEW": "Nuevo",
   "BACK": "Volver",
   "LOTSFORM": "Formulario Lotes",
-  "LOT": "Lote"
+  "LOT": "Lote",
+  "PREINVOICES": "Proformas",
+  "INVOICES": "Facturas"
 }

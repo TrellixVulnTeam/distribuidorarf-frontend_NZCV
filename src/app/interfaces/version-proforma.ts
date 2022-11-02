@@ -7,6 +7,8 @@ export interface VersionProforma {
     accion: string;
     fechaCreacion: Date;
     fechaUltimaModificacion: Date;
+    totalLinea: number;
+    precioUnitario: number;
 
     // -- Relaciones -- (La relacion con el detalle forma parte de la llave)    
     detalleProforma: DetalleProforma;    

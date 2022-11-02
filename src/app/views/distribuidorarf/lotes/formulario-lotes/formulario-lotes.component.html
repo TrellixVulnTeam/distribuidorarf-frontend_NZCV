@@ -8,7 +8,7 @@
             <div fxLayout="row wrap">
                 <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                     <mat-form-field style="width: 100%;">
-                        <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+                        <input matInput placeholder="Autorización" formControlName="autorizacionEmpleado" type="password">
                     </mat-form-field>                              
                 </div>                                
                 <div fxFlex="100" fxFlex.gt-xs="37" class="pr-16">
@@ -65,7 +65,7 @@
                 </div>
                 <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                     <div class="container-item-board">
-                        <h2>{{'PRODUCTS' | translate}} <span class="material-icons" style="color: green;cursor: pointer;margin-bottom: 1%;" (click)="crearProductoRapido({})">add_box</span></h2>
+                        <h2>Productos <span class="material-icons" style="color: green;cursor: pointer;margin-bottom: 1%;" (click)="crearProductoRapido({})">add_box</span></h2>
                         <mat-form-field class="margin-333" style="width: 50%;float: right;">
                             <input 
                                 matInput 
@@ -103,7 +103,7 @@
                 </div>
                 <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                     <div class="container-item-board">
-                        <h2>{{'LOT' | translate}}</h2>          
+                        <h2>Lote</h2>          
                         <mat-form-field class="margin-333" style="width: 50%;float: right;">
                             <input 
                                 matInput 
@@ -155,9 +155,9 @@
                     </div>
                 </div>
                 <div fxFlex="100" class="mt-16">
-                    <button mat-button color="warn" type="button">{{"CANCEL" | translate }}</button>
+                    <button mat-button color="warn" type="button">Cancelar</button>
                     <span fxFlex></span>
-                    <button mat-raised-button color="primary" [disabled]="datosInicialesForm.invalid">{{"SAVE" | translate }}</button>            
+                    <button mat-raised-button color="primary" [disabled]="datosInicialesForm.invalid">Guardar</button>            
                 </div>
             </div>
         </form>

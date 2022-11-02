@@ -6,15 +6,21 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Canton } from 'app/interfaces/canton';
 import { Distrito } from 'app/interfaces/distrito';
 import { ProveedorDto } from 'app/interfaces/dto/proveedor-dto';
+import { ErrorBk } from 'app/interfaces/error-bk';
 import { Provincia } from 'app/interfaces/provincia';
 import { TipoIdentificacion } from 'app/interfaces/tipo-identificacion';
 import { Token } from 'app/interfaces/token';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
+import { StringManager } from 'app/managers/string-manager';
 import { CantonesService } from 'app/services/cantones.service';
 import { FuncionesService } from 'app/services/funciones.service';
 import { ProveedoresService } from 'app/services/proveedores.service';
 import { ProvinciasService } from 'app/services/provincias.service';
 import { TiposIdentificacionService } from 'app/services/tipos-identificacion.service';
 import { UserApiService } from 'app/services/user-api.service';
+import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
+import { environment } from 'environments/environment';
 import { CustomValidators } from 'ngx-custom-validators';
 
 declare const google: any;
@@ -104,20 +110,29 @@ export class ProveedoresPopupComponent implements OnInit {
 
   esEditar: boolean = false;
 
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
     public dialogRef: MatDialogRef<ProveedoresPopupComponent>,
     private fb: FormBuilder,
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private snack: MatSnackBar,    
     private mapsAPILoader: MapsAPILoader, 
     private ngZone: NgZone,
     private proveedoresService: ProveedoresService,
-    private provinciasServices: ProvinciasService,
-    private funcionesService: FuncionesService
+    private funcionesService: FuncionesService,
+    private loader: AppLoaderService,
   ) { }
 
   ngOnInit(): void {    
+    this.loader.open();
     this.buildItemForm(this.data.payload);                   
     this.mapsAPILoader.load().then(() => {     
       this.setCurrentLocation();                   
@@ -145,28 +160,18 @@ export class ProveedoresPopupComponent implements OnInit {
         });
       });
     });
-    this.userApiService.login().subscribe(
-      res => {
-        this.token = res;            
-        this.cargarEmpleados();
-        if(this.data.payload.identificacion != '' && this.data.payload.identificacion != null){      
-          this.esEditar = true;
-          // console.log(this.data.payload.tipoIdentificacion.idTipoIdetificacion);                    
-          
-          this.mapCenter.lat = this.data.payload.latLongDireccion.split(',')[0];
-          this.mapCenter.lng = this.data.payload.latLongDireccion.split(',')[1];
+    this.cargarEmpleados();
+    if(this.data.payload.identificacion != '' && this.data.payload.identificacion != null){      
+      this.esEditar = true;
+      this.mapCenter.lat = this.data.payload.latLongDireccion.split(',')[0];
+      this.mapCenter.lng = this.data.payload.latLongDireccion.split(',')[1];
 
-          this.markers.push({
-            lat: this.data.payload.latLongDireccion.split(',')[0],
-            lng: this.data.payload.latLongDireccion.split(',')[1],
-            draggable: true
-          });             
-        }
-      },
-      err => {        
-        this.snack.open(err.message, "ERROR", { duration: 4000 });        
-      }
-    );
+      this.markers.push({
+        lat: this.data.payload.latLongDireccion.split(',')[0],
+        lng: this.data.payload.latLongDireccion.split(',')[1],
+        draggable: true
+      });             
+    }
   }
 
   buildItemForm(item) {
@@ -260,26 +265,25 @@ export class ProveedoresPopupComponent implements OnInit {
     this.proveedorDTO.codigoResponsable = this.itemForm.controls.autorizacionEmpleado.value;    
     
     if(this.esEditar){      
-      this.proveedoresService.update(this.token.access_token, this.proveedorDTO.identificacion, this.proveedorDTO).subscribe(
+      this.proveedoresService.update(this.proveedorDTO.identificacion, this.proveedorDTO).subscribe(
         res => {          
           this.dialogRef.close(this.proveedorDTO);          
         },
         err => {
-          console.log(err); 
-          this.snack.open(err.message, "ERROR", { duration: 4000 });                   
+          this.reintento(err, nombresMetodos.finalizarProceso);
         }
       );
     }else{
-      this.funcionesService.validaProveedorExiste(this.token.access_token, this.proveedorDTO.nombre).subscribe(
+      this.funcionesService.validaProveedorExiste(this.proveedorDTO.nombre).subscribe(
         res =>{
           this.validaProveedor = res[0];        
           if(this.validaProveedor.proveedorexiste == 0){            
-            this.proveedoresService.newRow(this.token.access_token, this.proveedorDTO).subscribe(
+            this.proveedoresService.newRow(this.proveedorDTO).subscribe(
               res => {                
                 this.dialogRef.close(this.proveedorDTO);
               },
               err => {
-                this.snack.open(err.message, "ERROR", { duration: 4000 });                       
+                this.reintento(err, nombresMetodos.finalizarProceso);
               }
             );          
           }else{
@@ -287,7 +291,7 @@ export class ProveedoresPopupComponent implements OnInit {
           }
         },
         err =>{
-         this.snack.open(err.message, "ERROR", { duration: 4000 });         
+          this.reintento(err, nombresMetodos.finalizarProceso);
         }
       );  
 
@@ -307,14 +311,49 @@ export class ProveedoresPopupComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {        
+        this.loader.close();
         this.listaEmpleados = res;        
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.cargarEmpleados);
       }
     );
+  }
+
+  reintento(err: any, metodo: string, data?: any, isNew?: boolean, url?: string, id?: number){    
+    this.error = err.error;
+    if(this.intentos == this.serviceManager.MAX_INTENTOS){
+      this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+    }else{
+      if(this.error.statusCode == 401){
+        this.intentos += 1;
+        this.tokenService.login().subscribe(
+          res => {
+              this.token = res;
+              LocalStorageManger.setToken(this.token.access_token);
+              this.intentos = 1;
+              if(metodo === nombresMetodos.cargarEmpleados){
+                this.cargarEmpleados();
+              }else if(metodo === nombresMetodos.finalizarProceso){
+                this.finalizarProceso();
+              }else{
+                this.snack.open(this.strings.error_mgs_metodo_no_encontrado + metodo, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+          },
+          err => {
+            this.intentos = 1;
+            this.loader.close(); 
+            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        );              
+      }else{
+        this.intentos = 1;
+        this.loader.close();
+        this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+      }
+    }
   }
 
 }
@@ -329,4 +368,9 @@ interface marker {
 
 interface contador {
   proveedorexiste: number
+}
+
+enum nombresMetodos {  
+  cargarEmpleados = "cargarEmpleados",  
+  finalizarProceso = "finalizarProceso"
 }

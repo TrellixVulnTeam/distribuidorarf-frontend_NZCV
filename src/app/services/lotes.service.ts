@@ -2,6 +2,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { LoteDto } from 'app/interfaces/dto/lote-dto';
 import { Lote } from 'app/interfaces/lote';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
 import { environment } from 'environments/environment';
 import { Observable } from 'rxjs';
 
@@ -10,36 +12,37 @@ import { Observable } from 'rxjs';
 })
 export class LotesService {
 
+  services = ServiceManager;
   BASE_URL: string = environment.BASE_URL;
-  entity: string = environment.SERVICE_LOTES;
+  entity: string = this.services.SERVICE_LOTES;
 
 
   constructor(
     private http: HttpClient
   ) { }
 
-  getAll(token: string): Observable<Lote[]>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  getAll(): Observable<Lote[]>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.get<Lote[]>(`${this.BASE_URL}/${this.entity}`,{headers: heads});
   }
 
-  getOne(token: string, codigoLote: number): Observable<Lote>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  getOne(codigoLote: number): Observable<Lote>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.get<Lote>(`${this.BASE_URL}/${this.entity}/${codigoLote}`,{headers: heads});
   }
 
-  newRow(token: string, loteDTO: LoteDto): Observable<Lote>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  newRow(loteDTO: LoteDto): Observable<Lote>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.post<Lote>(`${this.BASE_URL}/${this.entity}`, loteDTO,{headers: heads});
   }
 
-  update(token: string, codigoLote: number, loteDTO: LoteDto): Observable<Lote>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  update(codigoLote: number, loteDTO: LoteDto): Observable<Lote>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.put<Lote>(`${this.BASE_URL}/${this.entity}/${codigoLote}`, loteDTO,{headers: heads});
   }
 
-  delete(token: string, codigoLote: number){
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  delete(codigoLote: number){
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.delete(`${this.BASE_URL}/${this.entity}/${codigoLote}`,{headers: heads});
   }
 }

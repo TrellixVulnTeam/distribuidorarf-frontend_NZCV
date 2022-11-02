@@ -19,6 +19,7 @@ export interface Persona {
     codigoAutorizacion: string;
     otrasSenas: string;
     codigoResponsable: string;
+    precio: number;
 
     // -------------- Cliente --------------
     //Waze o google maps si tiene, es la url que se guarda

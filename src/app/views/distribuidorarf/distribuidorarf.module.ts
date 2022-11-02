@@ -54,8 +54,6 @@ import { DetalleProductoLotePopupComponent } from './lotes/formulario-lotes/deta
 import { AsignacionDetalleProductosComponent } from './lotes/asignacion-detalle-productos/asignacion-detalle-productos.component';
 import { ActualizaProductosComponent } from './lotes/asignacion-detalle-productos/actualiza-productos/actualiza-productos.component';
 import { CreacionRapidaProductoComponent } from './productos/creacion-rapida-producto/creacion-rapida-producto.component';
-import { ProformasComponent } from './proformas/proformas.component';
-import { FacturasComponent } from './facturas/facturas.component';
 
 
 @NgModule({
@@ -80,7 +78,8 @@ import { FacturasComponent } from './facturas/facturas.component';
     FormularioLotesComponent,
     DetalleProductoLotePopupComponent,
     AsignacionDetalleProductosComponent,    
-    ActualizaProductosComponent, CreacionRapidaProductoComponent, ProformasComponent, FacturasComponent
+    ActualizaProductosComponent, 
+    CreacionRapidaProductoComponent
   ],
   imports: [
     DragDropModule,

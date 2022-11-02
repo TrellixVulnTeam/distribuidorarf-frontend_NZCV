@@ -5,15 +5,20 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { DetalleLote } from 'app/interfaces/detalle-lote';
 import { DetalleProductoLote } from 'app/interfaces/detalle-producto-lote';
 import { DetalleLoteDto } from 'app/interfaces/dto/detalle-lote-dto';
+import { ErrorBk } from 'app/interfaces/error-bk';
 import { Persona } from 'app/interfaces/persona';
 import { Producto } from 'app/interfaces/producto';
 import { Token } from 'app/interfaces/token';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
+import { StringManager } from 'app/managers/string-manager';
 import { DetallesLoteService } from 'app/services/detalles-lote.service';
 import { FuncionesService } from 'app/services/funciones.service';
 import { ProcedimientosDbService } from 'app/services/procedimientos-db.service';
 import { ProductosService } from 'app/services/productos.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
+import { environment } from 'environments/environment';
 import { DetalleProductoLotePopupComponent } from '../../formulario-lotes/detalle-producto-lote-popup/detalle-producto-lote-popup.component';
 
 @Component({
@@ -40,6 +45,14 @@ export class ActualizaProductosComponent implements OnInit {
   precioUnitario: number = 0;
   precioTotal: number = 0;
 
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
+
   constructor(
     private tokenService: UserApiService,
     private snack: MatSnackBar, 
@@ -57,27 +70,17 @@ export class ActualizaProductosComponent implements OnInit {
   ngOnInit(): void {
     this.loader.open();
     this.buildItemForm();    
-    this.tokenService.login().subscribe(
-      res => {
-        this.token = res;        
-        this.cargarEmpleados();
-        this.cargarDetallesLote(this.data.payload.codigoLote);        
-        this.loadProducts();                    
-      },
-      err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });        
-      }
-    );
+    this.cargarEmpleados();
+    this.cargarDetallesLote(this.data.payload.codigoLote);        
+    this.loadProducts();                          
   }  
 
   loadProducts(){
-    this.productosService.getAll(this.token.access_token).subscribe(
+    this.productosService.getAll().subscribe(
       res => {
         let temporal: Producto[] = [];        
         temporal = res;
         let itemsTemp: Producto[] = [];
-        
-
         temporal.forEach(element => {
           let detalleActual: DetalleLoteDto = null;
           detalleActual = this.itemsLote.find(x => x.producto == element.idProducto);
@@ -92,13 +95,38 @@ export class ActualizaProductosComponent implements OnInit {
         this.loader.close();
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos = this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.loadProducts();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );    
   }
 
   cargarDetallesLote(codigoLote){
-    this.detallesLoteService.getAll(this.token.access_token, codigoLote).subscribe(
+    this.loader.open();
+    this.detallesLoteService.getAll(codigoLote).subscribe(
       res => { 
         this.itemsDetalle = res;        
         let tempList: DetalleLoteDto[] = [];    
@@ -123,7 +151,31 @@ export class ActualizaProductosComponent implements OnInit {
         this.loader.close();
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos = this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.cargarDetallesLote(codigoLote);
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
   }
@@ -147,13 +199,36 @@ export class ActualizaProductosComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.listaEmpleados = res;
-        console.log(this.listaEmpleados);
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos = this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.cargarEmpleados();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
   }
@@ -173,23 +248,71 @@ export class ActualizaProductosComponent implements OnInit {
     this.itemsLote.forEach(element => {
       element.lote = codigoLote;      
       element.idDetalleLote = codigoLote + element.producto;
-      this.detallesLoteService.newRow(this.token.access_token, element).subscribe(
+      this.detallesLoteService.newRow(element).subscribe(
         res => {
           if(cantidadActual === cantidadDetalles){
-            this.procedimientosDBService.actualizaCostoLote(this.token.access_token, this.data.payload.codigoLote).subscribe(
+            this.procedimientosDBService.actualizaCostoLote(this.data.payload.codigoLote).subscribe(
               res => {
                 let respuesta = res;
                 return this.dialogRef.close(this.itemsLote);
               },
               err => {
-                this.snack.open(err.message, "ERROR", { duration: 4000 });                
+                this.error = err.error;
+                if(this.intentos = this.serviceManager.MAX_INTENTOS){
+                  this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }else{
+                  if(this.error.statusCode == 401){
+                    this.intentos += 1;
+                    this.tokenService.login().subscribe(
+                      res => {
+                          this.token = res;
+                          LocalStorageManger.setToken(this.token.access_token);
+                          this.intentos = 1;
+                          this.actualizaDetallesLote(codigoLote);
+                      },
+                      err => {
+                        this.intentos = 1;
+                        this.loader.close(); 
+                        this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                      }
+                    );              
+                  }else{
+                    this.intentos = 1;
+                    this.loader.close();
+                    this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                  }
+                }
               }
             );            
           }
           cantidadActual += 1;
         },
         err => {
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
+          this.error = err;
+          if(this.intentos = this.serviceManager.MAX_INTENTOS){
+            this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }else{
+            if(this.error.statusCode == 401){
+              this.intentos += 1;
+              this.tokenService.login().subscribe(
+                res => {
+                    this.token = res;
+                    LocalStorageManger.setToken(this.token.access_token);
+                    this.intentos = 1;
+                    this.actualizaDetallesLote(codigoLote);
+                },
+                err => {
+                  this.intentos = 1;
+                  this.loader.close(); 
+                  this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              );              
+            }else{
+              this.intentos = 1;
+              this.loader.close();
+              this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          }
         }
       );            
     });

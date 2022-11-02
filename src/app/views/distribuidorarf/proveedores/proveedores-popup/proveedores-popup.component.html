@@ -3,29 +3,29 @@
     <mat-horizontal-stepper [linear]="isLinear" #stepper>
         <mat-step [stepControl]="itemForm">
             <form [formGroup]="itemForm">
-                <ng-template matStepLabel>{{'PROVIDER' | translate}}</ng-template>
+                <ng-template matStepLabel>Proveedor</ng-template>
                 <div fxLayout="row wrap">
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
-                        <mat-slide-toggle [formControl]="itemForm.controls['estaActivo']">{{'ACTIVO' | translate}}</mat-slide-toggle>                                       
+                        <mat-slide-toggle [formControl]="itemForm.controls['estaActivo']">Activo</mat-slide-toggle>                                       
                     </div>            
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+                            <input matInput placeholder="Autorización" formControlName="autorizacionEmpleado" type="password">
                         </mat-form-field>          
                     </div>                            
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                          <input matInput placeholder="{{'NOMBRE' | translate}}" formControlName="nombre" required>
+                          <input matInput placeholder="Nombre" formControlName="nombre" required>
                         </mat-form-field>                    
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">                
                         <mat-form-field style="width: 100%;">
-                          <input matInput placeholder="{{'TELEFONO' | translate}}" formControlName="telefono" type="number">
+                          <input matInput placeholder="Teléfono" formControlName="telefono" type="number">
                         </mat-form-field>                        
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'CORREOELECTRONICO' | translate}}" formControlName="correoElectronico" name="correoElectronico" type="email" value="" required>                  
+                            <input matInput placeholder="Correo electrónico" formControlName="correoElectronico" name="correoElectronico" type="email" value="" required>                  
                         </mat-form-field>                        
                         <small 
                             *ngIf="itemForm.controls['correoElectronico'].hasError('required') && itemForm.controls['correoElectronico'].touched" 
@@ -37,12 +37,12 @@
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'COMENTARIOS' | translate}}" formControlName="comentarios">
+                            <input matInput placeholder="Comentarios" formControlName="comentarios">
                         </mat-form-field>                   
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'URL' | translate}}" 
+                            <input matInput placeholder="URL" 
                                    formControlName="url"                                   
                             >
                         </mat-form-field>               
@@ -50,18 +50,18 @@
                             *ngIf="itemForm.controls['url'].hasError('url') && itemForm.controls['url'].touched"
                             class="form-error-msg" 
                         >
-                        {{'URL_INVALIDO' | translate}}
+                        URL inválido
                         </small>    
                     </div>
                     <div>
-                        <button mat-raised-button matStepperNext color="primary" [disabled]="itemForm.invalid">{{'SIGUIENTE' | translate  }}</button>
+                        <button mat-raised-button matStepperNext color="primary" [disabled]="itemForm.invalid">Siguiente</button>
                     </div>
                 </div>                
             </form>
         </mat-step>
         <mat-step [stepControl]="secondFormGroup">
             <form [formGroup]="secondFormGroup">
-                <ng-template matStepLabel>{{'DIRECCION' | translate}}</ng-template>
+                <ng-template matStepLabel>Dirección</ng-template>
                 <div fxLayout="row wrap">
                     <!-- <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">                                        
                         <mat-form-field style="width: 100%;">
@@ -92,12 +92,12 @@
                     </div> -->
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                          <input matInput placeholder="{{'DIRECCION' | translate}}" formControlName="direccion">
+                          <input matInput placeholder="Dirección" formControlName="direccion">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                          <input matInput placeholder="{{'OTRASSENAS' | translate}}" formControlName="otrasSenas">
+                          <input matInput placeholder="Otras señas" formControlName="otrasSenas">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16" style="margin-bottom: 1%;">
@@ -126,7 +126,7 @@
                     </div>
                 </div>
                 <div>
-                    <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">{{'ATRAS' | translate}}</button>                              
+                    <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">Atrás</button>                              
                 </div>            
             </form>
         </mat-step>
@@ -136,5 +136,5 @@
 <div>
   <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancel</button>        
   <span fxFlex></span>
-  <button mat-raised-button color="primary" [disabled]="itemForm.invalid" (click)="submit()">{{"SAVE" | translate }}</button>          
+  <button mat-raised-button color="primary" [disabled]="itemForm.invalid" (click)="submit()">Guardar</button>          
 </div>

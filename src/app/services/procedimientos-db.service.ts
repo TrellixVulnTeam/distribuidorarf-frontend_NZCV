@@ -1,5 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
 import { environment } from 'environments/environment';
 import { Observable } from 'rxjs';
 
@@ -8,35 +10,36 @@ import { Observable } from 'rxjs';
 })
 export class ProcedimientosDbService {
 
+  services = ServiceManager;
   BASE_URL: string = environment.BASE_URL;
-  entity: string = environment.SERVICE_PROCEDIMIENTOS_DB;    
+  entity: string = this.services.SERVICE_PROCEDIMIENTOS_DB;    
 
   constructor(
     private http: HttpClient,      
   ){}        
 
-  actualizaFase(token: string, fase: number, codigoLote: number): Observable<string>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
+  actualizaFase(fase: number, codigoLote: number): Observable<string>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());      
     return this.http.get<string>(`${this.BASE_URL}/${this.entity}/actualizaFase/${fase}/${codigoLote}`,{headers: heads});
   }
 
-  actualizaCantidadAsiganaDetalleLote(token: string, codigoLote: number): Observable<string>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
+  actualizaCantidadAsiganaDetalleLote(codigoLote: number): Observable<string>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());      
     return this.http.get<string>(`${this.BASE_URL}/${this.entity}/actualizaCantidadAsiganaDetalleLote/${codigoLote}`,{headers: heads});
   }
 
-  actualizaCostoLote(token: string, codigoLote: number): Observable<string>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
+  actualizaCostoLote(codigoLote: number): Observable<string>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());      
     return this.http.get<string>(`${this.BASE_URL}/${this.entity}//${codigoLote}`,{headers: heads});
   }
 
-  borrarLote(token: string, codigoLote: number): Observable<string>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
+  borrarLote(codigoLote: number): Observable<string>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());      
     return this.http.get<string>(`${this.BASE_URL}/${this.entity}/borrarLote/${codigoLote}`,{headers: heads});
   }
 
-  finalizaLote(token: string, codigoLote: number, responsable: string): Observable<string>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);      
+  finalizaLote(codigoLote: number, responsable: string): Observable<string>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());      
     return this.http.get<string>(`${this.BASE_URL}/${this.entity}/finalizaLote/${codigoLote}/${responsable}`,{headers: heads});
   }
 }

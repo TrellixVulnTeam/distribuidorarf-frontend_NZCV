@@ -1,11 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ErrorBk } from 'app/interfaces/error-bk';
 import { Token } from 'app/interfaces/token';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
+import { StringManager } from 'app/managers/string-manager';
 import { MarcasService } from 'app/services/marcas.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { AppConfirmService } from 'app/shared/services/app-confirm/app-confirm.service';
 import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
+import { environment } from 'environments/environment';
 import { Subscription } from 'rxjs';
 import { MarcaPopupComponent } from './marca-popup/marca-popup.component';
 
@@ -20,29 +25,29 @@ export class MarcasComponent implements OnInit {
   public temp = [];
   public getItemSub: Subscription;
 
-  tokenUserApi: Token = {
+  token: Token = {
     access_token: ``
   }
+
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
 
   constructor(
     private dialog: MatDialog,
     private loader: AppLoaderService,
     private snack: MatSnackBar,        
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private confirmService: AppConfirmService,
     private marcasService: MarcasService
   ) { }
 
   ngOnInit(): void {
-    this.userApiService.login().subscribe(
-      res => {
-          this.tokenUserApi = res;                           
-          this.getItems();    
-      },
-      err => {
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );    
+    this.getItems();        
   }
 
   ngOnDestroy() {
@@ -53,13 +58,37 @@ export class MarcasComponent implements OnInit {
 
   getItems(){
     this.loader.open();
-    this.marcasService.getAll(this.tokenUserApi.access_token).subscribe(
+    this.marcasService.getAll().subscribe(
       res => {
         this.items = this.temp = res;
         this.loader.close();
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.getItems();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
   }
@@ -79,25 +108,73 @@ export class MarcasComponent implements OnInit {
         }
         this.loader.open();
         if (isNew) {
-          this.marcasService.getAll(this.tokenUserApi.access_token).subscribe(
+          this.marcasService.getAll().subscribe(
             res => {
               this.items = this.temp = res;
               this.loader.close();
               this.snack.open("Marca creada con éxito", "ÉXITO", { duration: 4000 });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.error = err.error;
+              if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }else{
+                if(this.error.statusCode == 401){
+                  this.intentos += 1;
+                  this.tokenService.login().subscribe(
+                    res => {
+                        this.token = res;
+                        LocalStorageManger.setToken(this.token.access_token);
+                        this.intentos = 1;
+                        this.openPopUp(data, isNew);
+                    },
+                    err => {
+                      this.intentos = 1;
+                      this.loader.close(); 
+                      this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                    }
+                  );              
+                }else{
+                  this.intentos = 1;
+                  this.loader.close();
+                  this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              }              
             }
           );
         } else {          
-          this.marcasService.getAll(this.tokenUserApi.access_token).subscribe(
+          this.marcasService.getAll().subscribe(
             res => {
               this.items = this.temp = res;
               this.loader.close();
               this.snack.open("Marca editada con éxito", "ÉXITO", { duration: 4000 });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.error = err.error;
+              if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }else{
+                if(this.error.statusCode == 401){
+                  this.intentos += 1;
+                  this.tokenService.login().subscribe(
+                    res => {
+                        this.token = res;
+                        LocalStorageManger.setToken(this.token.access_token);
+                        this.intentos = 1;
+                        this.openPopUp(data, isNew);
+                    },
+                    err => {
+                      this.intentos = 1;
+                      this.loader.close(); 
+                      this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                    }
+                  );              
+                }else{
+                  this.intentos = 1;
+                  this.loader.close();
+                  this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              }  
             }
           );          
         }
@@ -109,15 +186,38 @@ export class MarcasComponent implements OnInit {
       .subscribe(res => {
         if (res) {
           this.loader.open();
-          this.marcasService.delete(this.tokenUserApi.access_token, row.idMarca).subscribe(
+          this.marcasService.delete(row.idMarca).subscribe(
             res => {
               this.snack.open('Marca eliminada correctamente!', 'OK', { duration: 4000 })
               this.getItems();
               this.loader.close();
             },
             err => {
-              console.log(err);
-              this.snack.open(err.message, "ERROR", { duration: 4000 });                                     
+              this.error = err.error;
+              if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }else{
+                if(this.error.statusCode == 401){
+                  this.intentos += 1;
+                  this.tokenService.login().subscribe(
+                    res => {
+                        this.token = res;
+                        LocalStorageManger.setToken(this.token.access_token);
+                        this.intentos = 1;
+                        this.deleteItem(row);
+                    },
+                    err => {
+                      this.intentos = 1;
+                      this.loader.close(); 
+                      this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                    }
+                  );              
+                }else{
+                  this.intentos = 1;
+                  this.loader.close();
+                  this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              }  
             }
           );
         }

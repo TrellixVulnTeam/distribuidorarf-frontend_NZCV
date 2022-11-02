@@ -18,6 +18,11 @@ import { Router } from '@angular/router';
 import { Persona } from 'app/interfaces/persona';
 import { FuncionesService } from 'app/services/funciones.service';
 import { CreacionRapidaProductoComponent } from '../../productos/creacion-rapida-producto/creacion-rapida-producto.component';
+import { StringManager } from 'app/managers/string-manager';
+import { ServiceManager } from 'app/managers/service-manager';
+import { ErrorBk } from 'app/interfaces/error-bk';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'app-formulario-lotes',
@@ -66,16 +71,24 @@ export class FormularioLotesComponent implements OnInit {
     tipoCambio: null
   }
 
-  tokenUserApi: Token = {
+  token: Token = {
     access_token: ``
   }
+
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
 
   constructor(
     private fb: FormBuilder,
     private productosService: ProductosService,
     private loader: AppLoaderService,
     private snack: MatSnackBar,        
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private dialog: MatDialog,
     private lotesService: LotesService,
     private detallesLoteService: DetallesLoteService,
@@ -85,17 +98,9 @@ export class FormularioLotesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loader.open();
-    this.buildItemForm('');
-    this.userApiService.login().subscribe(
-      res => {
-          this.tokenUserApi = res;                           
-          this.loadProducts();    
-          this.cargarEmpleados();
-      },
-      err => {
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );    
+    this.buildItemForm('');                               
+    this.loadProducts();    
+    this.cargarEmpleados();     
   }
 
   buildItemForm(item){
@@ -122,13 +127,37 @@ export class FormularioLotesComponent implements OnInit {
   loadProducts(){
     this.items = [];
     this.temp = [];
-    this.productosService.getAll(this.tokenUserApi.access_token).subscribe(
+    this.productosService.getAll().subscribe(
       res => {
         this.items = this.temp = res;
         this.loader.close();
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.loadProducts();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );    
   }
@@ -279,13 +308,37 @@ export class FormularioLotesComponent implements OnInit {
       this.snack.open("Código de autoriazión inválido.", "ERROR!!", { duration: 4000 }); 
     }else{
       this.crearLote();
-      this.lotesService.newRow(this.tokenUserApi.access_token, this.lote).subscribe(
+      this.lotesService.newRow(this.lote).subscribe(
         res => {
           this.loteInsertado = res;
           this.actualizaDetallesLote(this.loteInsertado.codigoLote);
         },
         err => {
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
+          this.error = err.error;
+          if(this.intentos == this.serviceManager.MAX_INTENTOS){
+            this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }else{
+            if(this.error.statusCode == 401){
+              this.intentos += 1;
+              this.tokenService.login().subscribe(
+                res => {
+                    this.token = res;
+                    LocalStorageManger.setToken(this.token.access_token);
+                    this.intentos = 1;
+                    this.submit();
+                },
+                err => {
+                  this.intentos = 1;
+                  this.loader.close(); 
+                  this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              );              
+            }else{
+              this.intentos = 1;
+              this.loader.close();
+              this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          }          
         }
       );
     }    
@@ -315,17 +368,42 @@ export class FormularioLotesComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.tokenUserApi.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.listaEmpleados = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.cargarEmpleados();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
   }
 
   actualizaDetallesLote(codigoLote: number){
+    
     let cantidadDetalles: number = this.itemsLote.length;
     let cantidadActual: number = 1;
     
@@ -333,7 +411,7 @@ export class FormularioLotesComponent implements OnInit {
       element.lote = codigoLote;      
       element.idDetalleLote = codigoLote + element.producto;
       console.log(element);
-      this.detallesLoteService.newRow(this.tokenUserApi.access_token, element).subscribe(
+      this.detallesLoteService.newRow(element).subscribe(
         res => {
           if(cantidadActual === cantidadDetalles){
             this.route.navigateByUrl('/distribuidorarf/lots');  
@@ -341,7 +419,31 @@ export class FormularioLotesComponent implements OnInit {
           cantidadActual += 1;
         },
         err => {
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
+          this.error = err.error;
+          if(this.intentos == this.serviceManager.MAX_INTENTOS){
+            this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }else{
+            if(this.error.statusCode == 401){
+              this.intentos += 1;
+              this.tokenService.login().subscribe(
+                res => {
+                    this.token = res;
+                    LocalStorageManger.setToken(this.token.access_token);
+                    this.intentos = 1;
+                    this.loadProducts();
+                },
+                err => {
+                  this.intentos = 1;
+                  this.loader.close(); 
+                  this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              );              
+            }else{
+              this.intentos = 1;
+              this.loader.close();
+              this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          }
         }
       );            
     });

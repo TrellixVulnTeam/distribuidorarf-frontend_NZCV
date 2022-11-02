@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, ViewChild } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProductoDto } from 'app/interfaces/dto/producto-dto';
 import { Categoria } from 'app/interfaces/categoria';
@@ -13,7 +13,7 @@ import { Marca } from 'app/interfaces/marca';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DetalleProducto } from 'app/interfaces/detalle-producto';
 import { DetalleProductoDto } from 'app/interfaces/dto/detalle-producto-dto';
-import { FileItem, FileUploader } from 'ng2-file-upload';
+import { FileUploader } from 'ng2-file-upload';
 import { CodigosProducto } from 'app/interfaces/interfaces-funciones/codigos-producto';
 import { FuncionesService } from 'app/services/funciones.service';
 import { CategoriaPopupComponent } from '../../categorias/categoria-popup/categoria-popup.component';
@@ -33,9 +33,12 @@ import { DetallesProductosService } from 'app/services/detalles-productos.servic
 import { KardexDto } from 'app/interfaces/dto/kardex-dto';
 import { Kardex } from 'app/interfaces/kardex';
 import swal from 'sweetalert2';
-import { number } from 'ngx-custom-validators/src/app/number/validator';
 import { KardexService } from 'app/services/kardex.service';
-import { J } from '@angular/cdk/keycodes';
+import { ErrorBk } from 'app/interfaces/error-bk';
+import { ServiceManager } from 'app/managers/service-manager';
+import { StringManager } from 'app/managers/string-manager';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
  
 @Component({
   selector: 'app-formulario-producto',
@@ -162,7 +165,8 @@ export class FormularioProductoComponent implements OnInit {
     codigoResponsable: null,
     esRetiroTemporal: null,
     fechaReIngreso: null,
-    finalizadoReingreso: null
+    finalizadoReingreso: null,
+    detalleProforma: null
   }
 
   kardex: Kardex = {
@@ -181,16 +185,27 @@ export class FormularioProductoComponent implements OnInit {
     codigoResponsable: null,
     esRetiroTemporal: null,
     fechaReIngreso: null,
-    finalizadoReingreso: null
+    finalizadoReingreso: null,
+    detalleProforma: null
   }
   
   public items: any[];    
   esEditar: boolean = false;
 
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
+
+
   constructor(
+    private loader: AppLoaderService,
     private categoriasService: CategoriasService,
     private snack: MatSnackBar,
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private fb: FormBuilder,
     private proveedoresService: ProveedoresService,
     private marcasService: MarcasService,
@@ -218,26 +233,19 @@ export class FormularioProductoComponent implements OnInit {
       nombreColor: 'Nombre Color',
       color: 'transparent'
     });
-    this.userApiService.login().subscribe(
-      res => {
-        this.token = res;       
-        this.cargarEmpleados();
-        this.cargarCategorias();        
-        this.cargarProveedores();
-        this.cargarMarcas();            
-        if(this.data.payload._id !== undefined){          
-          this.cargarProducto(this.data.payload._id);
-          this.esEditar = true;
-        }    
-      },
-      err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );    
+
+    this.cargarEmpleados();
+    this.cargarCategorias();        
+    this.cargarProveedores();
+    this.cargarMarcas();            
+    if(this.data.payload._id !== undefined){          
+      this.cargarProducto(this.data.payload._id);
+      this.esEditar = true;
+    }        
   }
 
   cargarProducto(idProducto){
-    this.productosService.getOne(this.token.access_token, idProducto).subscribe(
+    this.productosService.getOne(idProducto).subscribe(
       res => {
         this.producto = res;           
         this.productoDTO.idProducto = this.producto.idProducto;
@@ -344,7 +352,7 @@ export class FormularioProductoComponent implements OnInit {
   }
 
   cargarCategorias(){    
-    this.categoriasService.getAll(this.token.access_token).subscribe(
+    this.categoriasService.getAll().subscribe(
       res => {
         this.categorias = res;
       },
@@ -355,23 +363,23 @@ export class FormularioProductoComponent implements OnInit {
   }
 
   cargarProveedores(){
-    this.proveedoresService.getAll(this.token.access_token).subscribe(
+    this.proveedoresService.getAll().subscribe(
       res => {
         this.proveedores = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.cargarProveedores);
       }
     );
   }
 
   cargarMarcas(){
-    this.marcasService.getAll(this.token.access_token).subscribe(
+    this.marcasService.getAll().subscribe(
       res => {
         this.marcas = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.cargarMarcas);
       }
     );
   }
@@ -417,12 +425,11 @@ export class FormularioProductoComponent implements OnInit {
     this.items.splice(index, 1);
     let contador = 0;
 
-    this.detallesProductosService.getOne(this.token.access_token, codigo).subscribe(
+    this.detallesProductosService.getOne(codigo).subscribe(
       res => {
         let detalleEncontrado = res;
-        console.log(detalleEncontrado);
         if(detalleEncontrado != null){
-          this.detallesProductosService.delete(this.token.access_token, codigo).subscribe(
+          this.detallesProductosService.delete(codigo).subscribe(
             res => {              
               this.productoDTO.cantidadExistencias = 0;
               this.items.forEach(element => {      
@@ -434,11 +441,11 @@ export class FormularioProductoComponent implements OnInit {
               this.datosInicialesForm.controls.cantidadExistencias.setValue(this.productoDTO.cantidadExistencias);              
               // -- Inserta la mercaderia nueva en kardex                                                                                                                            
               let precioKardex = this.productoDTO.esLiquidacion === true ? this.preciosForm.controls.precioVentaLiquidacion1.value : this.preciosForm.controls.precioVenta1.value;                              
-              alert(precioKardex);  
+              
               this.insertaKardex(detalleEncontrado.idDetalleProducto, -detalleEncontrado.cantidad, this.productoDTO.cantidadExistencias, precioKardex, this.preciosForm.controls.costo.value, this.productoDTO.idProducto, "Borrado Detalle de producto", true);  
             },
             err => {
-              console.log(err);        
+              this.reintento(err, nombresMetodos.eliminarDetalle, null, null, null, codigo); 
             }
           );
         }else{
@@ -453,7 +460,7 @@ export class FormularioProductoComponent implements OnInit {
         }        
       },
       err => {
-        console.log(err);
+        this.reintento(err, nombresMetodos.eliminarDetalle, null, null, null, codigo);
       }
     );            
   }
@@ -469,7 +476,7 @@ export class FormularioProductoComponent implements OnInit {
   codigosProducto: CodigosProducto[] = [];
 
   validaCodigoProducto(){
-    this.funcionesService.obtieneCodigosProducto(this.token.access_token, this.productoDTO.codigoExterno).subscribe(
+    this.funcionesService.obtieneCodigosProducto(this.productoDTO.codigoExterno).subscribe(
       res => {
         this.codigosProducto = res;
         let maxContador = 0;
@@ -482,12 +489,12 @@ export class FormularioProductoComponent implements OnInit {
               }
             }            
           });         
-          this.snack.open("El código ya existe por lo se modificó", "ALERTA!!", { duration: 4000 });
+          this.snack.open(this.strings.msg_codigo_producto_existente, this.strings.alert_title, { duration: environment.TIEMPO_NOTIFICACION });
           this.productoDTO.idProducto = this.productoDTO.idProducto + '-' + (maxContador+1);  
         }
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.validaCodigoProducto);
       }
     );
   }
@@ -551,12 +558,12 @@ export class FormularioProductoComponent implements OnInit {
         this.preciosForm.controls.utilidadLiquidacion4.setValue(nuevaUtilidad);
       }      
     }else{
-      this.snack.open("Posee valores inválidos, por favor revise", "ERROR!!", { duration: 4000 });
+      this.snack.open(this.strings.error_msg_valores_invalidos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
     }    
   }
 
   openPopUp(data: any = {}, isNew?) {
-    let title = isNew ? 'Agragar Categoría' : 'Modificar Categoría';
+    let title = isNew ? this.strings.categoria_agregar: this.strings.categoria_editar;
     let dialogRef: MatDialogRef<any> = this.dialog.open(CategoriaPopupComponent, {
       width: '1020px',
       disableClose: true,
@@ -569,25 +576,25 @@ export class FormularioProductoComponent implements OnInit {
           return;
         }        
         if (isNew) {
-          this.categoriasService.getAll(this.token.access_token).subscribe(
+          this.categoriasService.getAll().subscribe(
             res => {
               this.categorias = res;
               // this.loader.close();
-              this.snack.open("Categoría creada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.categoria_creada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUp, data, isNew);
             }
           );
         } else {          
-          this.categoriasService.getAll(this.token.access_token).subscribe(
+          this.categoriasService.getAll().subscribe(
             res => {
               this.categorias = res;
               // this.loader.close();
-              this.snack.open("Categoría editada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.categoria_editada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUp, data, isNew);
             }
           );          
         }
@@ -595,7 +602,7 @@ export class FormularioProductoComponent implements OnInit {
   }
 
   openPopUpProveedor(data: any = {}, isNew?) {
-    let title = isNew ? 'Agragar Proveedor' : 'Modificar Proveedor';
+    let title = isNew ? this.strings.proveedor_agregar : this.strings.proveedor_editar;
     // console.log(console.log("Entra: " + data.distrito.idDistrito));
     let dialogRef: MatDialogRef<any> = this.dialog.open(ProveedoresPopupComponent, {
       width: '1020px',
@@ -609,23 +616,23 @@ export class FormularioProductoComponent implements OnInit {
           return;
         }        
         if (isNew) {
-          this.proveedoresService.getAll(this.token.access_token).subscribe(
+          this.proveedoresService.getAll().subscribe(
             res => {
               this.proveedores = res;              
-              this.snack.open("El proveedor fue editado con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.proveedor_editada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUpProveedor, data, isNew);             
             }
           );
         } else {          
-          this.proveedoresService.getAll(this.token.access_token).subscribe(
+          this.proveedoresService.getAll().subscribe(
             res => {
               this.proveedores = res;              
-              this.snack.open("El proveedor fue editado con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.proveedor_editada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUpProveedor, data, isNew);
             }
           );          
         }
@@ -633,7 +640,7 @@ export class FormularioProductoComponent implements OnInit {
   }
 
   openPopUpMarca(data: any = {}, isNew?) {
-    let title = isNew ? 'Agragar Marca' : 'Modificar Marca';
+    let title = isNew ? this.strings.marca_agregar : this.strings.marca_editar;
     let dialogRef: MatDialogRef<any> = this.dialog.open(MarcaPopupComponent, {
       width: '1020px',
       disableClose: true,
@@ -646,23 +653,23 @@ export class FormularioProductoComponent implements OnInit {
           return;
         }        
         if (isNew) {
-          this.marcasService.getAll(this.token.access_token).subscribe(
+          this.marcasService.getAll().subscribe(
             res => {
               this.marcas = res;              
-              this.snack.open("Marca creada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.marca_creada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUpMarca, data, isNew);
             }
           );
         } else {          
-          this.marcasService.getAll(this.token.access_token).subscribe(
+          this.marcasService.getAll().subscribe(
             res => {
               this.marcas = res;              
-              this.snack.open("Marca editada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.marca_editada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUpMarca, data, isNew);
             }
           );          
         }
@@ -690,7 +697,7 @@ export class FormularioProductoComponent implements OnInit {
         this.nuevoProducto();
       }
     }else{
-      this.snack.open("El código de empleado no es correcto. Por favor validarlo y volver a intentarlo.", "ERROR", { duration: 4000 });         
+      this.snack.open(this.strings.error_codigo_empleado, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
     }    
     
   }     
@@ -701,7 +708,7 @@ export class FormularioProductoComponent implements OnInit {
       this.productoDTO.esLiquidacion = false;
     }
     // Insertar producto (PASO 1)  
-    this.productosService.update(this.token.access_token, this.productoDTO.idProducto, this.productoDTO).subscribe(
+    this.productosService.update(this.productoDTO.idProducto, this.productoDTO).subscribe(
       res => {        
         // this.producto = res;
         this.progreso = 25;
@@ -709,8 +716,7 @@ export class FormularioProductoComponent implements OnInit {
         //Insertar los precios (PASO 2)
         this.crearListaPrecios();
         this.precios.forEach(element => {          
-          console.log(element);
-          this.preciosProductosService.update(this.token.access_token, element.idPrecioProducto, element).subscribe(
+          this.preciosProductosService.update(element.idPrecioProducto, element).subscribe(
             res => {
               this.precioProducto = res;
               contador = contador + 1;
@@ -725,11 +731,11 @@ export class FormularioProductoComponent implements OnInit {
                     const blob = new Blob([element._file], { type: element._file.type  });
                     let nuevoNombre = element._file.name.split('.')[0] + '-' + contadorImg + '.' + element._file.name.split('.')[1];
               
-                    this.blobService.uploadImage(environment.AZURESASTOKEN, blob, nuevoNombre, () => {          
+                    this.blobService.uploadImage(this.serviceManager.AZURESASTOKEN, blob, nuevoNombre, () => {          
                       // console.log(`https://${environment.AZUREACCOUNTNAME}.blob.core.windows.net/${environment.AZURECONTAINERNAME}/${element._file.name}`);
-                      this.imagenProductoDTO.URL = `https://${environment.AZUREACCOUNTNAME}.blob.core.windows.net/${environment.AZURECONTAINERNAME}/${nuevoNombre}`;
+                      this.imagenProductoDTO.URL = `https://${this.serviceManager.AZUREACCOUNTNAME}.blob.core.windows.net/${this.serviceManager.AZURECONTAINERNAME}/${nuevoNombre}`;
                       this.imagenProductoDTO.producto = this.producto.idProducto;
-                      this.imagenesService.newRow(this.token.access_token, this.imagenProductoDTO).subscribe(
+                      this.imagenesService.newRow(this.imagenProductoDTO).subscribe(
                         res => {
                           this.imagenProducto = res;                          
                           if(contadorImg == cantidadImagenes){
@@ -750,22 +756,22 @@ export class FormularioProductoComponent implements OnInit {
                                 let detalle = this.producto.detalles.findIndex(x => x.idDetalleProducto === element.id);
                                 if(contadorDetalle > 1){
                                   if(detalle > -1){ // -- debe actualizar el registro
-                                    this.detallesProductosService.update(this.token.access_token, element.id, this.detalleProductoDTO).subscribe(
+                                    this.detallesProductosService.update(element.id, this.detalleProductoDTO).subscribe(
                                       res =>{
                                         this.detalleProducto = res;                                                                  
                                         if(contadorDetalle == contadorDetalles){
                                           this.progreso = 100;
-                                          this.snack.open("Producto insertado correctamente.", "ÉXITO!!", { duration: 4000 });                                
+                                          this.snack.open(this.strings.producto_editado, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
                                           this.dialogRef.close(this.producto);
                                         }
                                         contadorDetalle = contadorDetalle + 1;
                                       }
                                       ,err => {
-                                        this.snack.open(err.message, "ERROR", { duration: 4000 });
+                                        this.reintento(err, nombresMetodos.editarProducto);
                                       }
                                     );
                                   }else{ // -- como no existe lo entra a insertart
-                                    this.detallesProductosService.newRow(this.token.access_token, this.detalleProductoDTO).subscribe(
+                                    this.detallesProductosService.newRow(this.detalleProductoDTO).subscribe(
                                       res => {
                                         this.detalleProducto = res;                            
                                         // -- Inserta la mercaderia nueva en kardex                                                                                
@@ -774,13 +780,13 @@ export class FormularioProductoComponent implements OnInit {
 
                                         if(contadorDetalle == contadorDetalles){
                                           this.progreso = 100;
-                                          this.snack.open("Producto insertado correctamente.", "ÉXITO!!", { duration: 4000 });                                
+                                          this.snack.open(this.strings.producto_agregado, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
                                           this.dialogRef.close(this.producto);
                                         }
                                         contadorDetalle = contadorDetalle + 1;
                                       }
                                       ,err => {
-                                        this.snack.open(err.message, "ERROR", { duration: 4000 });
+                                        this.reintento(err, nombresMetodos.editarProducto);
                                       }
                                     );
                                   }
@@ -793,7 +799,7 @@ export class FormularioProductoComponent implements OnInit {
                           contadorImg = contadorImg + 1;
                         },
                         err => {
-                          this.snack.open(err.message, "ERROR", { duration: 4000 });              
+                          this.reintento(err, nombresMetodos.editarProducto);
                         }
                       );
                     });                              
@@ -805,7 +811,7 @@ export class FormularioProductoComponent implements OnInit {
                   let contadorDetalle = 1;
                   if(contadorDetalles == 0){
                       this.progreso = 100;
-                      this.snack.open("Producto insertado correctamente.", "ÉXITO!!", { duration: 4000 });                                
+                      this.snack.open(this.strings.producto_agregado, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
                       this.dialogRef.close(this.producto);
                   }else{
                     this.items.forEach(element => {
@@ -820,7 +826,7 @@ export class FormularioProductoComponent implements OnInit {
                       if(contadorDetalle > 1){                        
                         let detalle = this.producto.detalles.findIndex(x => x.idDetalleProducto === element.id);                      
                         if(detalle > -1){ // -- debe actualizar el registro
-                          this.detallesProductosService.update(this.token.access_token, element.id, this.detalleProductoDTO).subscribe(
+                          this.detallesProductosService.update(element.id, this.detalleProductoDTO).subscribe(
                             res =>{
                               this.detalleProducto = res;                            
 
@@ -831,17 +837,17 @@ export class FormularioProductoComponent implements OnInit {
 
                               if(contadorDetalle == contadorDetalles){
                                 this.progreso = 100;
-                                this.snack.open("Producto insertado correctamente.", "ÉXITO!!", { duration: 4000 });                                
+                                this.snack.open(this.strings.producto_agregado, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
                                 this.dialogRef.close(this.producto);
                               }
                               contadorDetalle = contadorDetalle + 1;
                             }
                             ,err => {
-                              this.snack.open(err.message, "ERROR", { duration: 4000 });
+                              this.reintento(err, nombresMetodos.editarProducto);
                             }
                           );
                         }else{ // -- como no existe lo entra a insertart
-                          this.detallesProductosService.newRow(this.token.access_token, this.detalleProductoDTO).subscribe(
+                          this.detallesProductosService.newRow(this.detalleProductoDTO).subscribe(
                             res => {
                               this.detalleProducto = res;             
                               // -- Inserta la mercaderia nueva en kardex                                                                                                              
@@ -849,13 +855,13 @@ export class FormularioProductoComponent implements OnInit {
                               this.insertaKardex(this.detalleProducto.idDetalleProducto, this.detalleProducto.cantidad, this.productoDTO.cantidadExistencias, precioKardex, this.producto.costo, this.productoDTO.idProducto, "Inclusión Detalle de producto", false);                
                               if(contadorDetalle == contadorDetalles){
                                 this.progreso = 100;
-                                this.snack.open("Producto insertado correctamente.", "ÉXITO!!", { duration: 4000 });                                
+                                this.snack.open(this.strings.producto_agregado, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
                                 this.dialogRef.close(this.producto);
                               }
                               contadorDetalle = contadorDetalle + 1;
                             }
                             ,err => {
-                              this.snack.open(err.message, "ERROR", { duration: 4000 });
+                              this.reintento(err, nombresMetodos.editarProducto);
                             }
                           );
                         }
@@ -868,13 +874,13 @@ export class FormularioProductoComponent implements OnInit {
               }
             }
             ,err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.editarProducto);
             }
           );
         });
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.editarProducto);
       }
     );
   }
@@ -885,12 +891,12 @@ export class FormularioProductoComponent implements OnInit {
     }
     let contador: number = 1;    
     if(this.uploader.queue.length == 0){
-      this.snack.open("Debe insertar al menos una imagen", "ERROR", { duration: 4000 });
+      this.snack.open(this.strings.producto_msg_insertar_una_imagen, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
       this.progresoVisible = false;        
       return;
     }
     // Insertar producto (PASO 1)
-    this.productosService.newRow(this.token.access_token, this.productoDTO).subscribe(
+    this.productosService.newRow(this.productoDTO).subscribe(
       res => {
         this.producto = res;
         this.progreso = 25;
@@ -898,7 +904,7 @@ export class FormularioProductoComponent implements OnInit {
         //Insertar los precios (PASO 2)
         this.crearListaPrecios();        
         this.precios.forEach(element => {
-          this.preciosProductosService.newRow(this.token.access_token, element).subscribe(
+          this.preciosProductosService.newRow(element).subscribe(
             res => {
               this.precioProducto = res;
               contador = contador + 1;
@@ -910,11 +916,11 @@ export class FormularioProductoComponent implements OnInit {
                 this.uploader.queue.forEach(element => {      
                   const blob = new Blob([element._file], { type: element._file.type  });
             
-                  this.blobService.uploadImage(environment.AZURESASTOKEN, blob, element._file.name, () => {          
+                  this.blobService.uploadImage(this.serviceManager.AZURESASTOKEN, blob, element._file.name, () => {          
                     // console.log(`https://${environment.AZUREACCOUNTNAME}.blob.core.windows.net/${environment.AZURECONTAINERNAME}/${element._file.name}`);
-                    this.imagenProductoDTO.URL = `https://${environment.AZUREACCOUNTNAME}.blob.core.windows.net/${environment.AZURECONTAINERNAME}/${element._file.name}`;
+                    this.imagenProductoDTO.URL = `https://${this.serviceManager.AZUREACCOUNTNAME}.blob.core.windows.net/${this.serviceManager.AZURECONTAINERNAME}/${element._file.name}`;
                     this.imagenProductoDTO.producto = this.producto.idProducto;
-                    this.imagenesService.newRow(this.token.access_token, this.imagenProductoDTO).subscribe(
+                    this.imagenesService.newRow(this.imagenProductoDTO).subscribe(
                       res => {
                         this.imagenProducto = res;
                         
@@ -933,27 +939,26 @@ export class FormularioProductoComponent implements OnInit {
                               this.detalleProductoDTO.talla = element.talla; 
                               
                               if(contadorDetalle > 1){                                
-                                this.detallesProductosService.newRow(this.token.access_token, this.detalleProductoDTO).subscribe(
+                                this.detallesProductosService.newRow(this.detalleProductoDTO).subscribe(
                                   res => {
                                     this.detalleProducto = res;
-                                    console.log('inserto el detalle');                                    
                                     let precioKardex = this.productoDTO.esLiquidacion === true ? this.preciosForm.controls.precioVentaLiquidacion1.value : this.preciosForm.controls.precioVenta1.value;                              
                                     this.insertaKardex(this.detalleProducto.idDetalleProducto, this.detalleProducto.cantidad, this.productoDTO.cantidadExistencias, precioKardex, this.producto.costo, this.productoDTO.idProducto, "Inclusión Detalle de producto", false);   
                                     if(contadorDetalle == contadorDetalles){
                                       this.progreso = 100;
-                                      this.snack.open("Producto insertado correctamente.", "ÉXITO!!", { duration: 4000 });                                
+                                      this.snack.open(this.strings.producto_agregado, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
                                       this.dialogRef.close(this.producto);
                                     }
                                     contadorDetalle = contadorDetalle + 1;
                                   },
                                   err => {
-                                    this.snack.open(err.message, "ERROR", { duration: 4000 });                                
+                                    this.reintento(err, nombresMetodos.nuevoProducto);
                                   }
                                 );
                               }else{
                                 contadorDetalle = contadorDetalle + 1;
                                 this.progreso = 100;
-                                this.snack.open("Producto insertado correctamente.", "ÉXITO!!", { duration: 4000 });                                
+                                this.snack.open(this.strings.producto_agregado, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });                         
                                 this.dialogRef.close(this.producto);                                
                               }
                             });                          
@@ -961,7 +966,7 @@ export class FormularioProductoComponent implements OnInit {
                         contadorImg = contadorImg + 1;
                       },
                       err => {
-                        this.snack.open(err.message, "ERROR", { duration: 4000 });              
+                        this.reintento(err, nombresMetodos.nuevoProducto);
                       }
                     );
                   });                              
@@ -969,14 +974,14 @@ export class FormularioProductoComponent implements OnInit {
               }
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });              
+              this.reintento(err, nombresMetodos.nuevoProducto);
             }
           );          
 
         });        
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.nuevoProducto);
       }
     );
   }
@@ -992,14 +997,17 @@ export class FormularioProductoComponent implements OnInit {
     this.kardexDTO.producto  = producto;
     this.kardexDTO.persona = null;
     this.kardexDTO.esRetiro = esRetiro;
-    this.kardexDTO.codigoResponsable = this.datosInicialesForm.controls.autorizacionEmpleado.value;
+    this.kardexDTO.codigoResponsable = this.datosInicialesForm.controls.autorizacionEmpleado.value;    
+    this.accionInsertarKardex();
+  }
 
-    this.kardexService.newRow(this.token.access_token, this.kardexDTO).subscribe(
+  accionInsertarKardex(){
+    this.kardexService.newRow(this.kardexDTO).subscribe(
       res => {
         console.log("Kardex insertado");
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.accionInsertarKardex);
       }
     );
   }
@@ -1089,29 +1097,29 @@ export class FormularioProductoComponent implements OnInit {
 
   eliminarImagenAzure(url, idImagenProducto){    
     swal.fire({
-      title: "Borrar Imagén Producto",
-      text: "Desea eliminar la imagen?",
+      title: this.strings.producto_titulo_borrar_imagen,
+      text: this.strings.producto_msg_borrar_imagen,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: "Si, Bórralo!!",
-      cancelButtonText: "Cancelar"
+      confirmButtonText: this.strings.producto_btn_borrar_imagen,
+      cancelButtonText: this.strings.btn_cancelar
     }).then((result) =>{
       if(result.value){                                
         let rutaSplit = url.split('/');                     
         let nombreImg = rutaSplit[rutaSplit.length-1];
 
-        this.imagenesService.delete(this.token.access_token, idImagenProducto).subscribe(
+        this.imagenesService.delete(idImagenProducto).subscribe(
           res => {
-            this.snack.open("Imagen eliminada con éxito", "ÉXITO!!!", { duration: 4000 });              
+            this.snack.open(this.strings.producto_img_eliminada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
             let index = this.listaImagenes.findIndex(x => x.idImagenProducto === idImagenProducto);
             this.listaImagenes.splice(index, 1);            
           },
           err => {
-            this.snack.open(err.message, "ERROR", { duration: 4000 });              
+            this.reintento(err, nombresMetodos.eliminarImagenAzure, null, null, url, idImagenProducto);
           }
         );
 
-        this.blobService.deleteImage(environment.AZURESASTOKEN, nombreImg, () =>{          
+        this.blobService.deleteImage(this.serviceManager.AZURESASTOKEN, nombreImg, () =>{          
         });
       }
     });    
@@ -1130,15 +1138,81 @@ export class FormularioProductoComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.listaEmpleados = res;
-        console.log(this.listaEmpleados);
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.cargarEmpleados);
       }
     );
   }
 
+  reintento(err: any, metodo: string, data?: any, isNew?: boolean, url?: string, id?: number){
+    this.error = err.error;
+    if(this.intentos == this.serviceManager.MAX_INTENTOS){
+      this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+    }else{
+      if(this.error.statusCode == 401){
+        this.intentos += 1;
+        this.tokenService.login().subscribe(
+          res => {
+              this.token = res;
+              LocalStorageManger.setToken(this.token.access_token);
+              this.intentos = 1;
+              if(metodo === nombresMetodos.cargarEmpleados){
+                this.cargarEmpleados();
+              }else if(metodo === nombresMetodos.eliminarImagenAzure){
+                this.eliminarImagenAzure(url, id);
+              }else if(metodo === nombresMetodos.accionInsertarKardex){
+                this.accionInsertarKardex();
+              }else if(metodo === nombresMetodos.nuevoProducto){
+                this.nuevoProducto();
+              }else if(metodo === nombresMetodos.editarProducto){
+                this.editarProducto();
+              }else if(metodo === nombresMetodos.openPopUpMarca){
+                this.openPopUpMarca(data, isNew);
+              }else if(metodo === nombresMetodos.openPopUpProveedor){
+                this.openPopUpProveedor(data, isNew);
+              }else if(metodo === nombresMetodos.openPopUp){
+                this.openPopUp(data, isNew);
+              }else if(metodo === nombresMetodos.eliminarDetalle){
+                this.eliminarDetalle(id);
+              }else if(metodo === nombresMetodos.cargarMarcas){
+                this.cargarMarcas();
+              }else if(metodo === nombresMetodos.cargarProveedores){
+                this.cargarProveedores();
+              }else{
+                this.snack.open(this.strings.error_mgs_metodo_no_encontrado + metodo, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+          },
+          err => {
+            this.intentos = 1;
+            this.loader.close(); 
+            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        );              
+      }else{
+        this.intentos = 1;
+        this.loader.close();
+        this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+      }
+    }
+  }
+
+}
+
+enum nombresMetodos {  
+  cargarEmpleados = 'cargarEmpleados',
+  eliminarImagenAzure = 'eliminarImagenAzure',
+  accionInsertarKardex = 'accionInsertarKardex',
+  nuevoProducto = 'nuevoProducto',
+  editarProducto = 'editarProducto',
+  openPopUpMarca = 'openPopUpMarca',
+  openPopUpProveedor = 'openPopUpProveedor',
+  openPopUp = 'openPopUp',
+  validaCodigoProducto = 'validaCodigoProducto',
+  eliminarDetalle = 'eliminarDetalle',
+  cargarMarcas = 'cargarMarcas',
+  cargarProveedores = 'cargarProveedores'
 }

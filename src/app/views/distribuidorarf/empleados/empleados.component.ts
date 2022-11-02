@@ -2,12 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PersonaDto } from 'app/interfaces/dto/persona-dto';
+import { ErrorBk } from 'app/interfaces/error-bk';
 import { Token } from 'app/interfaces/token';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
+import { StringManager } from 'app/managers/string-manager';
 import { FuncionesService } from 'app/services/funciones.service';
 import { PersonaService } from 'app/services/persona.service';
 import { UserApiService } from 'app/services/user-api.service';
 import { AppConfirmService } from 'app/shared/services/app-confirm/app-confirm.service';
 import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
+import { environment } from 'environments/environment';
 import { EmpleadoPopupComponent } from './empleado-popup/empleado-popup.component';
 
 @Component({
@@ -43,54 +48,64 @@ export class EmpleadosComponent implements OnInit {
     tipoPersona: null,
     usuario: null,
     otrasSenas: null,
-    codigoResponsable: null
+    codigoResponsable: null,
+    precio: null
   }
 
-  tokenUserApi: Token = {
+  token: Token = {
     access_token: ``
   }
 
   public items: any[];
   public temp = [];
 
+  strings = StringManager;
+  intentos = 0;
+  serviceManager = ServiceManager;
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+
   constructor(
     private dialog: MatDialog,
     private loader: AppLoaderService,
     private snack: MatSnackBar,    
     private personasService: PersonaService,
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private funcionesService: FuncionesService,
     private confirmService: AppConfirmService
   ) { }
 
   ngOnInit(): void {
-    this.userApiService.login().subscribe(
-      res => {
-          this.tokenUserApi = res;                           
-          this.getItems();    
-      },
-      err => {
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );    
+    this.getItems();    
   }
 
   getItems() {
     this.loader.open();
-    this.funcionesService.obtenerEmpleados(this.tokenUserApi.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.items = this.temp = res;
-        console.log(res);
         this.loader.close();
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.getItems();
+          }else{
+            this.reintento(err, nombresMetodos.getItems);
+          }
+        }        
       }
     );
   }
 
   openPopUp(data: any = {}, isNew?) {
-    let title = isNew ? 'Agregar Empleado' : 'Modificar Empleado';
+    let title = isNew ? this.strings.empleado_agregar : this.strings.empleado_editar;
     let dialogRef: MatDialogRef<any> = this.dialog.open(EmpleadoPopupComponent, {
       width: '1020px',
       disableClose: true,
@@ -104,10 +119,10 @@ export class EmpleadosComponent implements OnInit {
         }
         // this.loader.open();
         if (isNew) {
-          this.snack.open("El empleado fue creado con éxito", "ÉXITO", { duration: 4000 });                       
+          this.snack.open(this.strings.empleado_creado, this.strings.success_title, { duration: 4000 });                       
           this.getItems();                    
         } else {          
-          this.snack.open("El empleado fue editado con éxito", "ÉXITO", { duration: 4000 });                       
+          this.snack.open(this.strings.empleado_editado, this.strings.success_title, { duration: 4000 });                       
           this.getItems();                             
         }
       })
@@ -140,15 +155,14 @@ export class EmpleadosComponent implements OnInit {
           this.personaDTO.codigoAutorizacion = row.codigoAutorizacion;
           this.personaDTO.tipoPersona = row.tipoPersona;
 
-          this.personasService.update(this.tokenUserApi.access_token, this.personaDTO.identificacion, this.personaDTO).subscribe(
+          this.personasService.update(this.personaDTO.identificacion, this.personaDTO).subscribe(
             res => {
               this.snack.open('Cliente desactivado!', 'OK', { duration: 4000 })
               this.getItems();
               this.loader.close();
             },
             err => {
-              console.log(err);
-              this.snack.open(err.message, "ERROR", { duration: 4000 });                                     
+              this.reintento(err, nombresMetodos.deleteItem, row);
             }
           );
 
@@ -162,4 +176,43 @@ export class EmpleadosComponent implements OnInit {
       })
   }
 
+  reintento(err: any, metodo: string, data?: any, isNew?: boolean, url?: string, id?: number){    
+    this.error = err.error;
+    if(this.intentos == this.serviceManager.MAX_INTENTOS){
+      this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+    }else{
+      if(this.error.statusCode == 401){
+        this.intentos += 1;
+        this.tokenService.login().subscribe(
+          res => {
+              this.token = res;
+              LocalStorageManger.setToken(this.token.access_token);
+              this.intentos = 1;
+              if(metodo === nombresMetodos.getItems){
+                this.getItems();
+              }else if(metodo === nombresMetodos.deleteItem){
+                this.deleteItem(data);
+              }else{
+                this.snack.open(this.strings.error_mgs_metodo_no_encontrado + metodo, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+          },
+          err => {
+            this.intentos = 1;
+            this.loader.close(); 
+            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        );              
+      }else{
+        this.intentos = 1;
+        this.loader.close();
+        this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+      }
+    }
+  }
+
+}
+
+enum nombresMetodos {  
+  getItems = 'getItems',
+  deleteItem = 'deleteItem',
 }
