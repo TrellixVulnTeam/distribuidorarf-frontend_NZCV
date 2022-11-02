@@ -41,7 +41,7 @@ export class BusquedaComponent implements OnInit {
     this.tokenService.login().subscribe(
       res => {
         this.token = res;        
-        this.productosService.getAll(this.token.access_token).subscribe(
+        this.productosService.getAll().subscribe(
           res => {
             this.rows = this.temp = res;
           },
@@ -91,7 +91,6 @@ export class BusquedaComponent implements OnInit {
 
   onSelect(event) {           
     this.codigoProductoSeleccionado = event.selected[0].idProducto;
-    console.log(event.selected);
   }
 
 }

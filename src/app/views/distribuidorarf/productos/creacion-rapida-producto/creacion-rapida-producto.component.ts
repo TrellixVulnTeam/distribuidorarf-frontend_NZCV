@@ -1,3 +1,4 @@
+import { E } from '@angular/cdk/keycodes';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -6,6 +7,7 @@ import { Categoria } from 'app/interfaces/categoria';
 import { ImagenProductoDto } from 'app/interfaces/dto/imagen-producto-dto';
 import { PrecioProductoDto } from 'app/interfaces/dto/precio-producto-dto';
 import { ProductoDto } from 'app/interfaces/dto/producto-dto';
+import { ErrorBk } from 'app/interfaces/error-bk';
 import { ImagenProducto } from 'app/interfaces/imagen-producto';
 import { CodigosProducto } from 'app/interfaces/interfaces-funciones/codigos-producto';
 import { Marca } from 'app/interfaces/marca';
@@ -13,6 +15,9 @@ import { PrecioProducto } from 'app/interfaces/precio-producto';
 import { Producto } from 'app/interfaces/producto';
 import { Proveedor } from 'app/interfaces/proveedor';
 import { Token } from 'app/interfaces/token';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
+import { StringManager } from 'app/managers/string-manager';
 import { CategoriasService } from 'app/services/categorias.service';
 import { FuncionesService } from 'app/services/funciones.service';
 import { ImagenesProductosService } from 'app/services/imagenes-productos.service';
@@ -21,6 +26,7 @@ import { PreciosProductosService } from 'app/services/precios-productos.service'
 import { ProductosService } from 'app/services/productos.service';
 import { ProveedoresService } from 'app/services/proveedores.service';
 import { UserApiService } from 'app/services/user-api.service';
+import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
 import { environment } from 'environments/environment';
 import { CategoriaPopupComponent } from '../../categorias/categoria-popup/categoria-popup.component';
 import { MarcaPopupComponent } from '../../marcas/marca-popup/marca-popup.component';
@@ -44,6 +50,15 @@ export class CreacionRapidaProductoComponent implements OnInit {
   token: Token = {
     access_token: ``
   }
+
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
+
 
   productoDTO: ProductoDto = {
     cantidadExistencias: null,
@@ -114,8 +129,9 @@ export class CreacionRapidaProductoComponent implements OnInit {
   constructor(
     private categoriasService: CategoriasService,
     private snack: MatSnackBar,
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private fb: FormBuilder,
+    private loader: AppLoaderService,
     private proveedoresService: ProveedoresService,
     private marcasService: MarcasService,
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -129,18 +145,10 @@ export class CreacionRapidaProductoComponent implements OnInit {
 
   ngOnInit(): void {
     this.buildItemForm(this.data.payload);        
-    this.userApiService.login().subscribe(
-      res => {
-        this.token = res;       
-        this.cargarEmpleados();
-        this.cargarCategorias();        
-        this.cargarProveedores();
-        this.cargarMarcas();                    
-      },
-      err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );
+    this.cargarEmpleados();
+    this.cargarCategorias();        
+    this.cargarProveedores();
+    this.cargarMarcas();            
   }
 
   buildItemForm(item) {
@@ -154,52 +162,51 @@ export class CreacionRapidaProductoComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.listaEmpleados = res;
-        console.log(this.listaEmpleados);
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.cargarEmpleados);
       }
     );
   }
 
   cargarCategorias(){    
-    this.categoriasService.getAll(this.token.access_token).subscribe(
+    this.categoriasService.getAll().subscribe(
       res => {
         this.categorias = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.cargarCategorias);
       }
     );
   }
 
   cargarProveedores(){
-    this.proveedoresService.getAll(this.token.access_token).subscribe(
+    this.proveedoresService.getAll().subscribe(
       res => {
         this.proveedores = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.cargarProveedores);
       }
     );
   }
 
   cargarMarcas(){
-    this.marcasService.getAll(this.token.access_token).subscribe(
+    this.marcasService.getAll().subscribe(
       res => {
         this.marcas = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.cargarMarcas);
       }
     );
   }
 
   validaCodigoProducto(){
-    this.funcionesService.obtieneCodigosProducto(this.token.access_token, this.productoDTO.codigoExterno).subscribe(
+    this.funcionesService.obtieneCodigosProducto(this.productoDTO.codigoExterno).subscribe(
       res => {
         this.codigosProducto = res;
         let maxContador = 0;
@@ -212,19 +219,18 @@ export class CreacionRapidaProductoComponent implements OnInit {
               }
             }            
           });         
-          this.snack.open("El código ya existe por lo se modificó", "ALERTA!!", { duration: 4000 });
+          this.snack.open(this.strings.msg_codigo_producto_existente, this.strings.alert_title, { duration: environment.TIEMPO_NOTIFICACION });
           this.productoDTO.idProducto = this.productoDTO.idProducto + '-' + (maxContador+1);  
         }
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.validaCodigoProducto);
       }
     );
   }
 
   openPopUpProveedor(data: any = {}, isNew?) {
-    let title = isNew ? 'Agragar Proveedor' : 'Modificar Proveedor';
-    // console.log(console.log("Entra: " + data.distrito.idDistrito));
+    let title = isNew ? this.strings.proveedor_agregar : this.strings.proveedor_editar;
     let dialogRef: MatDialogRef<any> = this.dialog.open(ProveedoresPopupComponent, {
       width: '1020px',
       disableClose: true,
@@ -237,23 +243,23 @@ export class CreacionRapidaProductoComponent implements OnInit {
           return;
         }        
         if (isNew) {
-          this.proveedoresService.getAll(this.token.access_token).subscribe(
+          this.proveedoresService.getAll().subscribe(
             res => {
               this.proveedores = res;              
-              this.snack.open("El proveedor fue editado con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.proveedor_creada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUpProveedor, data, isNew);
             }
           );
         } else {          
-          this.proveedoresService.getAll(this.token.access_token).subscribe(
+          this.proveedoresService.getAll().subscribe(
             res => {
               this.proveedores = res;              
-              this.snack.open("El proveedor fue editado con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.proveedor_editada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUpProveedor, data, isNew);            
             }
           );          
         }
@@ -261,7 +267,7 @@ export class CreacionRapidaProductoComponent implements OnInit {
   }
 
   openPopUp(data: any = {}, isNew?) {
-    let title = isNew ? 'Agragar Categoría' : 'Modificar Categoría';
+    let title = isNew ? this.strings.categoria_agregar : this.strings.categoria_editar;
     let dialogRef: MatDialogRef<any> = this.dialog.open(CategoriaPopupComponent, {
       width: '1020px',
       disableClose: true,
@@ -274,25 +280,23 @@ export class CreacionRapidaProductoComponent implements OnInit {
           return;
         }        
         if (isNew) {
-          this.categoriasService.getAll(this.token.access_token).subscribe(
+          this.categoriasService.getAll().subscribe(
             res => {
               this.categorias = res;
-              // this.loader.close();
-              this.snack.open("Categoría creada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.categoria_creada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUp, data, isNew);
             }
           );
         } else {          
-          this.categoriasService.getAll(this.token.access_token).subscribe(
+          this.categoriasService.getAll().subscribe(
             res => {
               this.categorias = res;
-              // this.loader.close();
-              this.snack.open("Categoría editada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.categoria_editada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUp, data, isNew);            
             }
           );          
         }
@@ -300,7 +304,7 @@ export class CreacionRapidaProductoComponent implements OnInit {
   }
 
   openPopUpMarca(data: any = {}, isNew?) {
-    let title = isNew ? 'Agragar Marca' : 'Modificar Marca';
+    let title = isNew ? this.strings.marca_agregar : this.strings.marca_editar;
     let dialogRef: MatDialogRef<any> = this.dialog.open(MarcaPopupComponent, {
       width: '1020px',
       disableClose: true,
@@ -313,23 +317,23 @@ export class CreacionRapidaProductoComponent implements OnInit {
           return;
         }        
         if (isNew) {
-          this.marcasService.getAll(this.token.access_token).subscribe(
+          this.marcasService.getAll().subscribe(
             res => {
               this.marcas = res;              
-              this.snack.open("Marca creada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.marca_creada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUpMarca, data, isNew);
             }
           );
         } else {          
-          this.marcasService.getAll(this.token.access_token).subscribe(
+          this.marcasService.getAll().subscribe(
             res => {
               this.marcas = res;              
-              this.snack.open("Marca editada con éxito", "ÉXITO", { duration: 4000 });                       
+              this.snack.open(this.strings.marca_editada, this.strings.success_title, { duration: environment.TIEMPO_NOTIFICACION });                       
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.openPopUpMarca, data, isNew);             
             }
           );          
         }
@@ -348,39 +352,39 @@ export class CreacionRapidaProductoComponent implements OnInit {
   }
 
   nuevoProducto(){
-    this.productosService.newRow(this.token.access_token, this.productoDTO).subscribe(
+    this.productosService.newRow(this.productoDTO).subscribe(
       res => {
         this.producto = res;
         let contador: number = 1;    
         this.crearListaPrecios();        
         this.precios.forEach(element => {
-          this.preciosProductosService.newRow(this.token.access_token, element).subscribe(
+          this.preciosProductosService.newRow(element).subscribe(
             res => {
               this.precioProducto = res;
               contador = contador + 1;
               if(contador == 4){
-                this.imagenProductoDTO.URL = `https://${environment.AZUREACCOUNTNAME}.blob.core.windows.net/${environment.AZURECONTAINERNAME}/default`;
+                this.imagenProductoDTO.URL = `https://${this.serviceManager.AZUREACCOUNTNAME}.blob.core.windows.net/${this.serviceManager.AZURECONTAINERNAME}/default`;
                 this.imagenProductoDTO.producto = this.producto.idProducto;
-                this.imagenesService.newRow(this.token.access_token, this.imagenProductoDTO).subscribe(
+                this.imagenesService.newRow(this.imagenProductoDTO).subscribe(
                   res => {
                     this.imagenProducto = res;
                     this.snack.open("El producto fue creado con éxito", "ÉXITO", { duration: 4000 });
                     this.dialogRef.close(this.producto);
                   },
-                  err => {
-                    this.snack.open(err.message, "ERROR", { duration: 4000 });
+                  err => {                    
+                    this.reintento(err, nombresMetodos.nuevoProducto);
                   }
                 );                
               }
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });
+              this.reintento(err, nombresMetodos.nuevoProducto);
             }
           );
         });        
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.nuevoProducto);
       }
     );
   }
@@ -448,4 +452,60 @@ export class CreacionRapidaProductoComponent implements OnInit {
     });
   }
 
+  reintento(err: any, metodo: string, data?: any, isNew?: boolean){
+    this.error = err.error;
+    if(this.intentos == this.serviceManager.MAX_INTENTOS){
+      this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+    }else{
+      if(this.error.statusCode == 401){
+        this.intentos += 1;
+        this.tokenService.login().subscribe(
+          res => {
+              this.token = res;
+              LocalStorageManger.setToken(this.token.access_token);
+              this.intentos = 1;
+              if(metodo === nombresMetodos.nuevoProducto){
+                this.nuevoProducto();
+              }else if(metodo === nombresMetodos.openPopUpMarca){
+                this.openPopUpMarca(data, isNew);
+              }else if(metodo === nombresMetodos.openPopUpProveedor){
+                this.openPopUpProveedor(data, isNew);
+              }else if(metodo === nombresMetodos.validaCodigoProducto){
+                this.validaCodigoProducto();
+              }else if(metodo === nombresMetodos.cargarMarcas){
+                this.cargarMarcas();                
+              }else if (metodo === nombresMetodos.cargarProveedores){
+                this.cargarProveedores();
+              }else if(metodo === nombresMetodos.cargarCategorias){
+                this.cargarCategorias();
+              }else if(metodo === nombresMetodos.cargarEmpleados){
+                this.cargarEmpleados();
+              }
+          },
+          err => {
+            this.intentos = 1;
+            this.loader.close(); 
+            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        );              
+      }else{
+        this.intentos = 1;
+        this.loader.close();
+        this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+      }
+    }
+  }
+
+}
+
+enum nombresMetodos {
+  nuevoProducto = 'nuevoProducto',
+  openPopUpMarca = 'openPopUpMarca',
+  openPopUp = 'openPopUp',
+  openPopUpProveedor = 'openPopUpProveedor',
+  validaCodigoProducto = 'validaCodigoProducto',
+  cargarMarcas = 'cargarMarcas',
+  cargarProveedores = 'cargarProveedores',
+  cargarCategorias = 'cargarCategorias',
+  cargarEmpleados = 'cargarEmpleados'
 }

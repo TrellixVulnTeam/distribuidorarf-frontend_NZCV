@@ -4,16 +4,16 @@
     <mat-horizontal-stepper [linear]="isLinear" #stepper>
         <mat-step [stepControl]="datosInicialesForm">
             <form [formGroup]="datosInicialesForm">
-                <ng-template matStepLabel>{{'GENERAL' | translate}}</ng-template>
+                <ng-template matStepLabel>General</ng-template>
                 <div fxLayout="row wrap">
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+                            <input matInput placeholder="Autorización" formControlName="autorizacionEmpleado" type="password">
                         </mat-form-field>          
                     </div>                            
                     <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
                         <mat-form-field style="width:85%;">
-                            <mat-select placeholder="{{'CATEGORIA' | translate}} *" name="categoria" [(ngModel)]="productoDTO.categoria" [ngModelOptions]="{standalone: true}" #selectCategoria >
+                            <mat-select placeholder="Categoría *" name="categoria" [(ngModel)]="productoDTO.categoria" [ngModelOptions]="{standalone: true}" #selectCategoria >
                               <mat-option *ngFor="let categoria of categorias" [value]="categoria.idCategoria">
                                 {{ categoria.nombre }}
                               </mat-option>
@@ -23,7 +23,7 @@
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
                         <mat-form-field style="width: 85%;">
-                            <mat-select placeholder="{{'PROVIDER' | translate}} *" name="proveedor" [(ngModel)]="productoDTO.proveedor" [ngModelOptions]="{standalone: true}" #selectProveedor >
+                            <mat-select placeholder="Proveedor *" name="proveedor" [(ngModel)]="productoDTO.proveedor" [ngModelOptions]="{standalone: true}" #selectProveedor >
                               <mat-option *ngFor="let proveedor of proveedores" [value]="proveedor.identificacion">
                                 {{ proveedor.nombre }}
                               </mat-option>
@@ -33,7 +33,7 @@
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="33" class="pr-16">
                         <mat-form-field style="width: 85%;">
-                            <mat-select placeholder="{{'BRANCH' | translate}} *" name="proveedor" [(ngModel)]="productoDTO.marca" [ngModelOptions]="{standalone: true}" #selectMarca >
+                            <mat-select placeholder="Marca *" name="proveedor" [(ngModel)]="productoDTO.marca" [ngModelOptions]="{standalone: true}" #selectMarca >
                               <mat-option *ngFor="let marca of marcas" [value]="marca.idMarca">
                                 {{ marca.nombre }}
                               </mat-option>
@@ -43,153 +43,153 @@
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'CODE' | translate}} *" formControlName="idProducto" type="text" [(ngModel)]="productoDTO.idProducto" onkeyup="this.value = this.value.toUpperCase();">
+                            <input matInput placeholder="Código *" formControlName="idProducto" type="text" [(ngModel)]="productoDTO.idProducto" onkeyup="this.value = this.value.toUpperCase();">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'CODEUSA' | translate}} *" formControlName="codigoExterno" type="text" (blur)="validaCodigoProducto()" [(ngModel)]="productoDTO.codigoExterno" onkeyup="this.value = this.value.toUpperCase();">
+                            <input matInput placeholder="Código externo *" formControlName="codigoExterno" type="text" (blur)="validaCodigoProducto()" [(ngModel)]="productoDTO.codigoExterno" onkeyup="this.value = this.value.toUpperCase();">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'NOMBRE' | translate}} *" formControlName="nombre" type="text" [(ngModel)]="productoDTO.nombre">
+                            <input matInput placeholder="Nombre *" formControlName="nombre" type="text" [(ngModel)]="productoDTO.nombre">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'CANTIDADMINIMA' | translate}} *" formControlName="cantidadMinima" type="number" [(ngModel)]="productoDTO.cantidadMinima" [min]="0">
+                            <input matInput placeholder="Cantidad Mínima *" formControlName="cantidadMinima" type="number" [(ngModel)]="productoDTO.cantidadMinima" [min]="0">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'CANTIDADEXISTENCIAS' | translate}}" formControlName="cantidadExistencias" type="number" [(ngModel)]="productoDTO.cantidadExistencias" readonly>
+                            <input matInput placeholder="Cantidad de existencias" formControlName="cantidadExistencias" type="number" [(ngModel)]="productoDTO.cantidadExistencias" readonly>
                         </mat-form-field>
                     </div>                    
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <textarea matInput placeholder="{{'DESCRIPTION' | translate}}" formControlName="descripcion" [(ngModel)]="productoDTO.descripcion" type="text"></textarea>
+                            <textarea matInput placeholder="Descripción" formControlName="descripcion" [(ngModel)]="productoDTO.descripcion" type="text"></textarea>
                         </mat-form-field>
                     </div>
                 </div>
                 <div>
                     <span fxFlex></span>
-                    <button mat-raised-button matStepperNext color="primary">{{'SIGUIENTE' | translate}}</button>
+                    <button mat-raised-button matStepperNext color="primary">Siguiente</button>
                 </div>
             </form>
         </mat-step>
         <mat-step [stepControl]="preciosForm">
             <form [formGroup]="preciosForm">
-                <ng-template matStepLabel>{{'PRECIOS' | translate}}</ng-template>
+                <ng-template matStepLabel>Precios</ng-template>
                 <div fxLayout="row wrap">
                     <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
-                        <mat-slide-toggle [formControl]="preciosForm.controls['esLiquidacion']" [(ngModel)]="productoDTO.esLiquidacion">{{'LIQUIDACION' | translate}}</mat-slide-toggle>
+                        <mat-slide-toggle [formControl]="preciosForm.controls['esLiquidacion']" [(ngModel)]="productoDTO.esLiquidacion">Liquidación</mat-slide-toggle>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo" type="number" (blur)="actualizaCostos()" [(ngModel)]="productoDTO.costo">
+                            <input matInput placeholder="Costo" formControlName="costo" type="number" (blur)="actualizaCostos()" [(ngModel)]="productoDTO.costo">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
 
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
-                        <label>{{'PRECIO' | translate}} 1</label>
+                        <label>Precio 1</label>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo1" type="number" readonly>
+                            <input matInput placeholder="Costo" formControlName="costo1" type="number" readonly>
                         </mat-form-field>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'UTILIDAD' | translate}}" formControlName="utilidad1" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(1)">
+                            <input matInput placeholder="Utilidad" formControlName="utilidad1" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(1)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta1" type="number" [min]="0" (blur)="calculaUtilidad(1)">
+                            <input matInput placeholder="Precio de venta" formControlName="precioVenta1" type="number" [min]="0" (blur)="calculaUtilidad(1)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion1" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(11)">
+                            <input matInput placeholder="Liquidación" formControlName="utilidadLiquidacion1" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(11)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'PRECIOVENTA' | translate}} {{'LIQUIDACION' | translate}}" formControlName="precioVentaLiquidacion1" type="number" [min]="0" (blur)="calculaUtilidad(11)">
+                            <input matInput placeholder="Precio de venta Liquidación" formControlName="precioVentaLiquidacion1" type="number" [min]="0" (blur)="calculaUtilidad(11)">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
-                        <label>{{'PRECIO' | translate}} 2</label>
+                        <label>Precio 2</label>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo2" type="number" readonly>
+                            <input matInput placeholder="Costo" formControlName="costo2" type="number" readonly>
                         </mat-form-field>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'UTILIDAD' | translate}}" formControlName="utilidad2" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(2)">
+                            <input matInput placeholder="Utilidad" formControlName="utilidad2" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(2)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta2" type="number" [min]="0" (blur)="calculaUtilidad(2)">
+                            <input matInput placeholder="Precio de venta" formControlName="precioVenta2" type="number" [min]="0" (blur)="calculaUtilidad(2)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion2" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(12)">
+                            <input matInput placeholder="Liquidación" formControlName="utilidadLiquidacion2" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(12)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'PRECIOVENTA' | translate}} {{'LIQUIDACION' | translate}}" formControlName="precioVentaLiquidacion2" type="number" [min]="0" (blur)="calculaUtilidad(12)">
+                            <input matInput placeholder="Precio de venta Liquidación" formControlName="precioVentaLiquidacion2" type="number" [min]="0" (blur)="calculaUtilidad(12)">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
-                        <label>{{'PRECIO' | translate}} 3</label>
+                        <label>Precio 3</label>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo3" type="number" readonly>
+                            <input matInput placeholder="Costo" formControlName="costo3" type="number" readonly>
                         </mat-form-field>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'UTILIDAD' | translate}}" formControlName="utilidad3" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(3)">
+                            <input matInput placeholder="Utilidad" formControlName="utilidad3" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(3)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta3" type="number" [min]="0" (blur)="calculaUtilidad(3)">
+                            <input matInput placeholder="Precio de venta" formControlName="precioVenta3" type="number" [min]="0" (blur)="calculaUtilidad(3)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion3" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(13)">
+                            <input matInput placeholder="Liquidación" formControlName="utilidadLiquidacion3" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(13)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'PRECIOVENTA' | translate}} {{'LIQUIDACION' | translate}}" formControlName="precioVentaLiquidacion3" type="number" [min]="0" (blur)="calculaUtilidad(13)">
+                            <input matInput placeholder="Precio de venta Liquidación" formControlName="precioVentaLiquidacion3" type="number" [min]="0" (blur)="calculaUtilidad(13)">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
-                        <label>{{'PRECIO' | translate}} 4</label>
+                        <label>Precio 4</label>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'COSTO' | translate}}" formControlName="costo4" type="number" readonly>
+                            <input matInput placeholder="Costo" formControlName="costo4" type="number" readonly>
                         </mat-form-field>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'UTILIDAD' | translate}}" formControlName="utilidad4" type="number" [max]="100" (blur)="calculaPercioVenta(4)">
+                            <input matInput placeholder="Utilidad" formControlName="utilidad4" type="number" [max]="100" (blur)="calculaPercioVenta(4)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'PRECIOVENTA' | translate}}" formControlName="precioVenta4" type="number" [min]="0" (blur)="calculaUtilidad(4)">
+                            <input matInput placeholder="Precio de venta" formControlName="precioVenta4" type="number" [min]="0" (blur)="calculaUtilidad(4)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'LIQUIDACION' | translate}}" formControlName="utilidadLiquidacion4" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(14)">
+                            <input matInput placeholder="Liquidación" formControlName="utilidadLiquidacion4" type="number" [min]="0" [max]="100" (blur)="calculaPercioVenta(14)">
                         </mat-form-field>
                         <mat-form-field style="width: 100%;" [style.display]="productoDTO.esLiquidacion? 'block' : 'none'">
-                            <input matInput placeholder="{{'PRECIOVENTA' | translate}} {{'LIQUIDACION' | translate}}" formControlName="precioVentaLiquidacion4" type="number" [min]="0" (blur)="calculaUtilidad(14)">
+                            <input matInput placeholder="Precio de venta Liquidación" formControlName="precioVentaLiquidacion4" type="number" [min]="0" (blur)="calculaUtilidad(14)">
                         </mat-form-field>
                     </div>
                 </div>
                 <div>
-                    <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">{{'ATRAS' | translate}}</button>
+                    <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">Atrás</button>
                     <span fxFlex></span>
-                    <button mat-raised-button matStepperNext color="primary">{{'SIGUIENTE' | translate}}</button>
+                    <button mat-raised-button matStepperNext color="primary">Siguiente</button>
                 </div>
             </form>
         </mat-step>
         <mat-step [stepControl]="detallesForm">
             <form [formGroup]="detallesForm">
-                <ng-template matStepLabel>{{'DETALLE' | translate}}</ng-template>
+                <ng-template matStepLabel>Detalle</ng-template>
                 <div fxLayout="row wrap">
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'TALLA' | translate}}" formControlName="talla" type="text" onkeyup="this.value = this.value.toUpperCase();">
+                            <input matInput placeholder="Talla" formControlName="talla" type="text" onkeyup="this.value = this.value.toUpperCase();">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'CANTIDAD' | translate}}" formControlName="cantidad" type="number">
+                            <input matInput placeholder="Cantidad" formControlName="cantidad" type="number">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                         <mat-form-field style="width: 100%;">
-                            <input matInput placeholder="{{'COLORNOMBRE' | translate}}" formControlName="colorNombre" type="text">
+                            <input matInput placeholder="Nombre del color" formControlName="colorNombre" type="text">
                         </mat-form-field>
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
@@ -205,7 +205,7 @@
                         />
                     </div>
                     <div fxFlex="100" fxFlex.gt-xs="25" class="pr-16">
-                        <button mat-raised-button color="primary" style="float: right;" (click)="agregarDetalle()">{{'ADD' | translate}}</button>
+                        <button mat-raised-button color="primary" style="float: right;" (click)="agregarDetalle()">Agregar</button>
                     </div>
                     <div style="clear: both;"></div>
                     <div style="width: 100%;">
@@ -250,13 +250,13 @@
                     </div>
                 </div>
                 <div>
-                    <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">{{'ATRAS' | translate}}</button>
+                    <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">Atrás</button>
                     <span fxFlex></span>
-                    <button mat-raised-button matStepperNext color="primary">{{'SIGUIENTE' | translate}}</button>
+                    <button mat-raised-button matStepperNext color="primary">Siguiente</button>
                 </div>
                 <mat-step [stepControl]="detallesForm">
                     <form [formGroup]="detallesForm">
-                        <ng-template matStepLabel>{{'IMAGENES' | translate}}</ng-template>
+                        <ng-template matStepLabel>Imágenes</ng-template>
                         <input type="file" ng2FileSelect [uploader]="uploader" style="margin-bottom: 2%;"/>
                         <div class="mb-16" style="margin-right: 1%;">
                             <div ng2FileDrop
@@ -346,9 +346,7 @@
                             </mat-card>
                         </div>
                         <div>
-                            <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">{{'ATRAS' | translate}}</button>
-                            <!-- <span fxFlex></span>
-                            <button mat-raised-button matStepperNext color="primary">{{'SIGUIENTE' | translate}}</button> -->
+                            <button mat-raised-button matStepperPrevious color="warn" style="margin-right: 1%;">Atrás</button>                            
                         </div>
                     </form>
                 </mat-step>
@@ -361,5 +359,5 @@
   <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancel</button>
   <span fxFlex></span>
   <!-- (click)="submit()" -->
-  <button mat-raised-button color="primary" [disabled]="datosInicialesForm.invalid" (click)="submit()">{{"SAVE" | translate }}</button>
+  <button mat-raised-button color="primary" [disabled]="datosInicialesForm.invalid" (click)="submit()">Guardar</button>
 </div>

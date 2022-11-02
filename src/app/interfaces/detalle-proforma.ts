@@ -1,3 +1,4 @@
+import { DetalleProducto } from "./detalle-producto";
 import { Factura } from "./factura";
 import { Producto } from "./producto";
 import { Proforma } from "./proforma";
@@ -12,10 +13,17 @@ export interface DetalleProforma {
     yaEnFactura: boolean;
     fechaCreacion: Date;    
     fechaUltimaModificacion: Date;
+    codigoResponsable: string;
+    cantidad: number;
+    precioInicial: number;
+    url: string;
+    detalleProfoma: number;
+    borrado: boolean;
+    lineaSeparada: boolean;
 
     // -- Relaciones --
     proforma: Proforma;
-    producto: Producto;
+    detalleProducto: DetalleProducto;
     factura: Factura;
     versiones: VersionProforma[];
 }

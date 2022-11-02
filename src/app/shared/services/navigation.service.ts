@@ -30,6 +30,18 @@ interface IBadge {
 export class NavigationService {
   iconMenu: IMenuItem[] = [  
     {
+      name: 'INVOICES',
+      type: 'link',
+      icon  : 'receipt_long',
+      state: 'facturas/listado-facturas',
+    },
+    {
+      name: 'Proformas',
+      type: 'link',
+      icon  : 'description',
+      state: 'proformas/listado-proformas',
+    },
+    {
       name: 'CUSTOMERS',
       type: 'link',
       icon  : 'person',

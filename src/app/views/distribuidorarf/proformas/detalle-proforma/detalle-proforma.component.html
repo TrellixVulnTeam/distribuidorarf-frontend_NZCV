@@ -1,0 +1,485 @@
+<!-- Editar proforma -->
+<mat-card *ngIf="showEditOption">
+    <form [formGroup]="proformaForm" (submit)="guardarProforma()" (keydown.enter)="$event.preventDefault()">        
+        <div fxLayout="row" fxLayoutAlign="end center">        
+            
+            <mat-chip-list aria-label="Fish selection" style="margin-right: 2%">                
+                <mat-chip class="green-800" selected [style.display]="proforma.estado === 'A TIEMPO' ? 'block' : 'none'">{{proforma.estado}}</mat-chip> 
+                <mat-chip class="deep-orange-A700" selected [style.display]="proforma.estado === 'VENCIDA' ? 'block' : 'none'">{{proforma.estado}}</mat-chip>
+            </mat-chip-list>
+            
+            <mat-form-field>
+                <input
+                  formControlName="codigoResponsable"
+                  matInput
+                  required
+                  type="password"
+                  placeholder="Código Responsable"
+                />
+            </mat-form-field>
+            <!-- <button
+              mat-button
+              type="button"
+              class="ml-16 mr-16"
+              *ngIf="!isLoading"
+              (click)="showEditOption = !showEditOption"
+            >
+              Cancelar
+            </button>       -->
+            <button-loading
+              [loadingText]="'Guardando...'"              
+              color="primary"
+              type="submit"
+              class="ml-16 mr-16"
+              [loading]="isLoading"
+              [style.display]="convertToInvoice ? 'none' : 'block'"
+            >Guardar</button-loading> <!--<mat-icon>save</mat-icon> -->
+            <button-loading
+              [loadingText]="'Procesando...'"
+              color="accent"
+              type="submit"
+              [loading]="isLoading"
+              [style.display]="convertToInvoice ? 'none' : 'block'"
+              >Guardar e Imprimir</button-loading
+            >            
+            <button-loading
+              [loadingText]="'Convirtiendo...'"
+              class="ml-16 mr-16"
+              color="primary"
+              type="submit"
+              [loading]="isLoading"
+              [style.display]="convertToInvoice ? 'block' : 'none'"
+              >Convertir a Factura </button-loading>
+        </div>
+        <!-- detalles de la proforma -->
+        <div fxLayout="row wrap" fxLayoutAlign="space-between" class="order-info">            
+            <div fxLayout="column" fxFlex="33.33%">
+                <h4><strong>Información de la Proforma</strong></h4>                
+                <mat-form-field>
+                    <input
+                    formControlName="numProforma"
+                    matInput
+                    [readonly]="true"
+                    placeholder="Num. Proforma (Autocompletado)"
+                    />
+                </mat-form-field>                
+                <mat-form-field fxFill>
+                    <input
+                      matInput
+                      [matDatepicker]="pickerFechaVencimiento"
+                      required
+                      placeholder="Fecha de Vencimiento"
+                      formControlName="fechaVencimiento"
+                      (click)="pickerFechaVencimiento.open()"
+                    />
+                    <mat-datepicker-toggle
+                      matSuffix
+                      [for]="pickerFechaVencimiento"
+                    ></mat-datepicker-toggle>
+                    <mat-datepicker #pickerFechaVencimiento></mat-datepicker>
+                </mat-form-field>
+            </div>
+            <div fxLayout="column" fxFlex="33.33%" fxLayoutGap="20px">
+                <!-- <div>
+                  <mat-radio-group
+                    formControlName="status"
+                    fxLayout="column"
+                    fxLayoutAlign="end end"
+                    fxLayoutGap="5px"
+                    required
+                  >
+                    <mat-radio-button labelPosition="before" value="pending">Pendiente</mat-radio-button>
+                    <mat-radio-button labelPosition="before" value="processing">Procesada</mat-radio-button>
+                    <mat-radio-button labelPosition="before" value="delivered">Entregada</mat-radio-button>
+                  </mat-radio-group>
+                </div> -->
+        
+                <div>
+                  <mat-form-field fxFill>
+                    <input
+                      matInput
+                      [matDatepicker]="picker"
+                      required
+                      placeholder="Fecha de Emisión"
+                      formControlName="fechaEmision"        
+                    />
+                    <mat-datepicker-toggle
+                      matSuffix
+                      [for]="picker"
+                    ></mat-datepicker-toggle>
+                    <mat-datepicker #picker></mat-datepicker>
+                  </mat-form-field>
+                </div>                
+            </div>
+        </div>
+        <mat-divider></mat-divider>      
+        <!-- Datos del cliente   -->
+        <h4 style="margin-top: 2%;"><strong>Datos del Cliente</strong></h4>                
+        <div class="billing-address" fxLayout="row wrap" fxLayoutAlign="left">
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="33%">                
+                    <mat-form-field>
+                        <input
+                          formControlName="identificacion"
+                          matInput
+                          required
+                          [readonly]="isEdit"
+                          placeholder="Buscar Cliente"
+                          (keyup.enter)="buscarCliente();"
+                        />                                                            
+                    </mat-form-field>                         
+                
+            </div>
+            <div fxLayout="row wrap" fxLayoutGap="20px" fxFlex="10%">                
+                <mat-icon *ngIf="!isEdit" type="button" style="color: green;font-size:42px;cursor:pointer;float: left;" (click)="buscarCliente()">pageview</mat-icon>                
+                <mat-icon *ngIf="!isEdit" type="button" style="color: red;font-size:40px;cursor:pointer;float: left;" (click)="limpiarCliente()">delete</mat-icon>
+            </div>         
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="24%">
+                <mat-form-field style="width: 100%;">
+                    <mat-select placeholder="Término *" name="termino" formControlName="idTermino" #selectTermino (selectionChange)="changeTermino(selectTermino.value)">
+                      <mat-option *ngFor="let term of terminos" [value]="term.idTermino">
+                        {{ term.nombre }}
+                      </mat-option>
+                    </mat-select>                             
+                </mat-form-field>                                                           
+            </div>                       
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="24%" style="margin-left: 2%;">                
+                <mat-form-field style="width: 100%;">
+                    <mat-select placeholder="Precio *" name="precio" formControlName="precio" #selectPrecio (selectionChange)="obtieneProductosXPrecio(selectPrecio.value)">
+                        <mat-option *ngFor="let pr of precios" [value]="pr.valor">
+                        {{ pr.nombre }}
+                        </mat-option>
+                    </mat-select>                             
+                    </mat-form-field>                                               
+            </div>
+        </div>
+        <div class="billing-address" fxLayout="row wrap" fxLayoutAlign="space-between center">            
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="33%">
+                <mat-form-field>
+                    <input
+                      formControlName="nombre"
+                      matInput
+                      required
+                      readonly
+                      placeholder="Nombre"
+                    />
+                </mat-form-field>
+                <mat-form-field>
+                    <input
+                      formControlName="correoElectronico"
+                      matInput
+                      required
+                      readonly
+                      placeholder="Correo Electrónico"
+                    />
+                </mat-form-field>
+            </div>
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="33%">
+                <mat-form-field>
+                    <input
+                      formControlName="apellidos"
+                      matInput
+                      required
+                      readonly
+                      placeholder="Apellidos"
+                    />
+                </mat-form-field>
+                <mat-form-field>
+                    <input
+                      formControlName="direccion"
+                      matInput
+                      required
+                      placeholder="Dirección"
+                    />
+                </mat-form-field>
+            </div>
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="33%">
+                <mat-form-field>
+                    <input
+                      formControlName="telefono"
+                      matInput
+                      required
+                      placeholder="Teléfono"
+                    />
+                </mat-form-field>                
+                <mat-form-field>
+                    <input
+                      formControlName="maxCredito"
+                      matInput
+                      required
+                      readonly
+                      placeholder="Max. Crédito"
+                    />
+                </mat-form-field>
+            </div>            
+        </div>
+        <mat-divider></mat-divider>       
+        <!-- Datos del producto                  -->
+        <div class="billing-address" fxLayout="row wrap" fxLayoutAlign="left">            
+            <div style="width: 100%;">
+                <h4 style="margin-top: 2%;"><strong>Productos</strong></h4>                
+            </div>            
+            <div style="clear: both;"></div>
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="33%">                
+                <mat-form-field>
+                    <input
+                        formControlName="codProducto"
+                        matInput
+                        placeholder="Cod. Producto"
+                        #codProductoInput
+                    />                                                            
+                </mat-form-field>                                     
+            </div>
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="10%">
+                <mat-icon style="color: green;font-size:42px;cursor:pointer" (click)="addNewItem(emptyFormObject)">pageview</mat-icon>
+            </div>
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="33%">                
+                <mat-form-field>
+                    <input
+                        formControlName="codProducto"
+                        matInput
+                        placeholder="Cod. Producto"
+                        #codProductoDeleteInput
+                    />                                                            
+                </mat-form-field>                                     
+            </div>
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="10%">
+                <mat-icon style="color: red;font-size:42px;cursor:pointer" (click)="discountItem(codProductoDeleteInput.value)">delete</mat-icon>
+            </div>         
+        </div>        
+        <div class="billing-address" fxLayout="row wrap" fxLayoutAlign="left">
+            <div class="item-form-list" fxLayout="column" fxFlex="75%">
+                <div
+                    class="item-form-list-head-line"
+                    fxLayout="row"
+                    fxLayoutAlign="space-around center"
+                >
+                    <p class="detailPreInvoiceHeader">Cod. Producto <mat-icon class="sortButton" type="button" (click)="sortItems('codigo')">swap_vert</mat-icon></p>
+                    <p class="detailPreInvoiceHeader">Nombre <mat-icon class="sortButton" type="button" (click)="sortItems('nombre')">swap_vert</mat-icon></p>
+                    <p class="detailPreInvoiceHeader">Precio Unitario</p>
+                    <p class="detailPreInvoiceHeader">Descuento</p>
+                    <p class="detailPreInvoiceHeader">Cantidad</p>
+                    <p class="detailPreInvoiceHeader">Total</p>
+                    <p></p>
+                </div>
+                <div 
+                *ngFor="let item of invoiceItemFormArray.controls; let i = index"
+                [formGroup]="item"
+                class="form-rows"
+                fxLayout="row"
+                fxLayoutAlign="space-around center"
+                >
+                    <mat-form-field style="width: 100px;">
+                        <input
+                            formControlName="idProducto"
+                            matInput
+                            placeholder="Cod. Producto"
+                            #idProducto
+                            required
+                            readonly
+                            style="cursor: pointer;"
+                            (focus)="cargarVistaPrevia(idProducto.value)"                            
+                        />
+                    </mat-form-field>                    
+                    
+                    <mat-form-field style="width: 100px;">
+                        <input
+                            formControlName="nombre"
+                            matInput
+                            placeholder="Nombre"
+                            #nombre
+                            required
+                            readonly
+                            (focus)="cargarVistaPrevia(idProducto.value)"
+                        />
+                    </mat-form-field>
+                    
+                    
+                    <mat-form-field style="width: 100px;">
+                        <input
+                            formControlName="precioUnitario"
+                            matInput
+                            placeholder="Precio Unitario"
+                            #precioUnitario
+                            required
+                            type="number"
+                            min="1"                            
+                            (keyup.enter)="cambiarPrecioXCantidad($event.target.value, cantidad.value , idProducto.value, item.value.indice)"
+                            (blur)="cambiarPrecioXCantidad($event.target.value, cantidad.value , idProducto.value, item.value.indice)"
+                        />
+                    </mat-form-field>
+
+                    <mat-form-field style="width: 100px;">
+                        <input
+                            formControlName="descuento"
+                            matInput
+                            placeholder="% de Descuento"
+                            #descuento
+                            required
+                            type="number"
+                            min="0"
+                            (keyup.enter)="actualizaDescuento(idProducto.value, item.value.indice)"
+                            (blur)="actualizaDescuento(idProducto.value, item.value.indice)"
+                        />
+                    </mat-form-field>
+                    
+                    
+                    <mat-form-field style="width: 100px;">
+                        <input
+                            formControlName="cantidad"
+                            matInput
+                            placeholder="Cantidad"
+                            #cantidad
+                            required
+                            type="number"
+                            min="1"
+                            (input)="cambiarPrecioXCantidad(precioUnitario.value, $event.target.value, idProducto.value, item.value.indice)"
+                        />
+                    </mat-form-field>
+
+                    <mat-form-field style="width: 100px;">
+                        <input
+                            formControlName="total"
+                            matInput
+                            placeholder="Total"
+                            #total
+                            required
+                            readonly
+                            type="number"
+                        />
+                    </mat-form-field>
+                    
+                    <div style="width: 50px;">
+                        <mat-icon style="color: red; float: right; cursor: pointer;" type="button" (click)="borrarLinea(idProducto.value, item.value.indice)">delete</mat-icon> 
+                        <mat-icon style="color:green; transform: rotate(90deg); float: right; cursor: pointer;" type="button" [style.display]="cantidad.value > 1 && item.value.lineaSeparada != true? 'block': 'none'" (click)="separateProduct(idProducto.value)">alt_route</mat-icon>                       
+                    </div>
+                </div>
+                <div
+                class="form-total-cost"
+                fxLayout="column"
+                fxLayoutAlign="center end"
+                fxLayoutGap="10px"
+                >
+                    <!-- sub total -->
+                    <div fxLayout="row" fxLayoutAlign="space-between center">
+                        <span>Sub Total:</span>
+                        <span>{{ currency }}{{ cost }}</span>
+                    </div>
+
+                    <!-- vat -->
+                    <!-- <div fxLayout="row" fxLayoutAlign="space-between center">
+                        <span>Vat(%):</span>
+                        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center">
+                        <mat-form-field>
+                            <input
+                            type="number"
+                            formControlName="vat"
+                            matInput
+                            placeholder="vat"
+                            required
+                            />
+                        </mat-form-field>
+                        <span>{{ currency }}{{ vat }}</span>
+                        </div>
+                    </div> -->
+
+                    <!-- Decuento Total -->
+                    <div fxLayout="row" fxLayoutAlign="space-between center">
+                        <span>Descuento:</span>
+                        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center">
+                        <!-- <mat-form-field>
+                            <input
+                            type="number"
+                            formControlName="vat"
+                            matInput
+                            placeholder="vat"
+                            required
+                            />
+                        </mat-form-field> -->
+                        <span>{{ currency }}{{ descuentoTotal }}</span>
+                        </div>
+                    </div>
+
+                    <!-- grand total -->
+                    <div fxLayout="row" fxLayoutAlign="space-between center">
+                        <h5><strong>Gran Total: </strong></h5>
+                        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center">
+                        <!-- <mat-form-field>
+                            <input
+                            formControlName="currency"
+                            matInput
+                            placeholder="currency"
+                            required
+                            />
+                        </mat-form-field> -->
+                        <h5>
+                            <strong>{{ currency }}{{ totalFinal + vat }}</strong>
+                        </h5>
+                        </div>
+                    </div>
+                    <!-- Cantidad Total de productos -->
+                    <div fxLayout="row" fxLayoutAlign="space-between center">
+                        <span>Cantidad Total: </span>
+                        <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="end center">
+                            <span>{{cantProductos}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div fxLayout="column" fxFlex="25%" fxLayoutAlign="space-around center">
+                <div style="width: 100%;text-align: center;">
+                    <h4 style="margin-top: 2%;"><strong>Vista Previa</strong></h4>                
+                    <img [src]="img" style="width: 80%;" />
+                </div>            
+                <div style="clear: both;"></div>
+            </div>
+        </div>
+        <div fxLayout="row" fxLayoutAlign="end center">
+            <div fxLayout="column" fxLayoutGap="20px" fxFlex="100%">
+                <mat-form-field>
+                    <input
+                      formControlName="comentarios"
+                      matInput
+                      placeholder="Comentarios"
+                      max="2000"
+                    />
+                </mat-form-field>
+            </div>                            
+        </div>        
+    </form>
+</mat-card>
+
+<!-- Nueva proforma -->
+<!-- <mat-card *ngIf="!showEditOption" class="invoice-details">
+    <div fxLayout="row">
+        <button mat-icon-button routerLink="/proformas/listado-proformas">
+            <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span fxFlex></span>
+
+        <button
+            mat-flat-button
+            color="primary"
+            class="ml-16 mr-16"
+            (click)="showEditOption = !showEditOption"
+        >
+            Editar Proforma
+        </button>
+        <button mat-flat-button color="accent" (click)="print()">
+            Imprimir Proforma
+        </button>
+    </div>
+    <div id="print-area">
+        <div class="order-info" fxLayout="row" fxLayoutAlign="space-between">
+            <div>
+              <h4><strong>Order Info</strong></h4>
+              <p>Order Number</p>
+              <p># {{ invoice?.orderNo }}</p>
+            </div>
+      
+            <div>
+              <p><strong>Order status: </strong> {{ invoice?.status }}</p>
+              <p><strong>Order date: </strong> {{ invoice?.date | date }}</p>
+            </div>
+          </div>
+    </div>
+</mat-card> -->

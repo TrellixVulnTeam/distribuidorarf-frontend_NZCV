@@ -9,6 +9,7 @@ import { MarcasComponent } from './marcas/marcas.component';
 import { DetalleProductoComponent } from './productos/detalle-producto/detalle-producto.component';
 import { FormularioProductoComponent } from './productos/formulario-producto/formulario-producto.component';
 import { ProductosComponent } from './productos/productos.component';
+import { DetalleProformaComponent } from './proformas/detalle-proforma/detalle-proforma.component';
 import { ProveedoresComponent } from './proveedores/proveedores.component';
 
 export const DistribuidorarfRoutes: Routes = [
@@ -74,7 +75,7 @@ export const DistribuidorarfRoutes: Routes = [
         path: 'lots/lots-form',
         component: FormularioLotesComponent,
         data: { title: 'Lots Form', breadcrumb: 'LOTSFORM' }
-      },
+      },      
     ]
   }
 ];

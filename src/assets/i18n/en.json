@@ -141,5 +141,7 @@
   "NEW": "New",
   "BACK": "Volver",
   "LOTSFORM": "Lots Form",
-  "LOT": "Lot"
+  "LOT": "Lot",
+  "PREINVOICES": "Pre-Invoices",
+  "INVOICES": "Invoices"
 }

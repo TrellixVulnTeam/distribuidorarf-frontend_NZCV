@@ -4,10 +4,15 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Categoria } from 'app/interfaces/categoria';
 import { CategoriaDto } from 'app/interfaces/dto/categoria-dto';
+import { ErrorBk } from 'app/interfaces/error-bk';
 import { Token } from 'app/interfaces/token';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { StringManager } from 'app/managers/string-manager';
 import { CategoriasService } from 'app/services/categorias.service';
 import { FuncionesService } from 'app/services/funciones.service';
 import { UserApiService } from 'app/services/user-api.service';
+import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'app-categoria-popup',
@@ -16,10 +21,16 @@ import { UserApiService } from 'app/services/user-api.service';
 })
 export class CategoriaPopupComponent implements OnInit {
 
+  strings = StringManager;
   public itemForm: FormGroup;
   esEditar: boolean = false;
   categorias: Categoria[] = [];
   listaEmpleados: any[] = [];
+
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
 
   categoriaDTO: CategoriaDto = {
     descripcion: null,
@@ -54,33 +65,44 @@ export class CategoriaPopupComponent implements OnInit {
     private snack: MatSnackBar,
     private categoriasService: CategoriasService,
     private funcionesService: FuncionesService,
+    private loader: AppLoaderService,
   ) { }
 
   ngOnInit(): void {    
+    this.loader.open();
     this.buildItemForm(this.data.payload);  
-    this.userApiService.login().subscribe(
-      res => {
-        this.token = res;               
-        this.cargarEmpleados();
-        this.cargarCategorias();
-        if(this.data.payload.idCategoria != '' && this.data.payload.idCategoria != null){      
-          this.categoriaDTO.idCategoria = this.data.payload.idCategoria;
-          this.esEditar = true;
-        }                 
-      },
-      err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );    
+    this.cargarEmpleados();
+    this.cargarCategorias();
+    if(this.data.payload.idCategoria != '' && this.data.payload.idCategoria != null){      
+      this.categoriaDTO.idCategoria = this.data.payload.idCategoria;
+      this.esEditar = true;
+    }        
   }
 
   cargarCategorias(){    
-    this.categoriasService.getAll(this.token.access_token).subscribe(
+    this.categoriasService.getAll().subscribe(
       res => {
         this.categorias = res;
+        this.loader.close();
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.error.statusCode == 401){
+          this.userApiService.login().subscribe(
+            res => {
+                this.token = res;
+                LocalStorageManger.setToken(this.token.access_token);
+                this.cargarCategorias();                                
+            },
+            err => {
+              this.loader.close();
+              this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          );              
+        }else{
+          this.loader.close();
+          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }
       }
     );
   }
@@ -106,13 +128,28 @@ export class CategoriaPopupComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.listaEmpleados = res;
-        console.log(this.listaEmpleados);
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.error.statusCode == 401){
+          this.userApiService.login().subscribe(
+            res => {
+                this.token = res;
+                LocalStorageManger.setToken(this.token.access_token);
+                this.cargarEmpleados();                                
+            },
+            err => {
+              this.loader.close();
+              this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          );              
+        }else{
+          this.loader.close();
+          this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }
       }
     );
   }
@@ -127,28 +164,28 @@ export class CategoriaPopupComponent implements OnInit {
       }
       console.log(this.categoriaDTO.idCategoriaPadre);
       if(this.esEditar){
-        this.categoriasService.update(this.token.access_token, this.categoriaDTO.idCategoria, this.categoriaDTO).subscribe(
+        this.categoriasService.update(this.categoriaDTO.idCategoria, this.categoriaDTO).subscribe(
           res => {
             this.categoria = res;
             this.dialogRef.close(this.categoria);         
           },
           err => {
-            this.snack.open(err.message, "ERROR", { duration: 4000 });
+            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
           }
         );
       }else{
-        this.categoriasService.newRow(this.token.access_token, this.categoriaDTO).subscribe(
+        this.categoriasService.newRow(this.categoriaDTO).subscribe(
           res => {
             this.categoria = res;
             this.dialogRef.close(this.categoria);         
           },
           err => {
-            this.snack.open(err.message, "ERROR", { duration: 4000 });
+            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
           }
         );
       }
     }else{
-      this.snack.open("El código de empleado no es correcto. Por favor validarlo y volver a intentarlo.", "ERROR", { duration: 4000 });         
+      this.snack.open(this.strings.error_codigo_empleado, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });         
     }  
   }
 

@@ -6,9 +6,13 @@ import { DetalleLote } from 'app/interfaces/detalle-lote';
 import { DetalleProducto } from 'app/interfaces/detalle-producto';
 import { DetalleProductoLote } from 'app/interfaces/detalle-producto-lote';
 import { DetalleProductoLoteDto } from 'app/interfaces/dto/detalle-producto-lote-dto';
+import { ErrorBk } from 'app/interfaces/error-bk';
 import { Lote } from 'app/interfaces/lote';
 import { Producto } from 'app/interfaces/producto';
 import { Token } from 'app/interfaces/token';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
+import { StringManager } from 'app/managers/string-manager';
 import { DetallesLoteService } from 'app/services/detalles-lote.service';
 import { DetallesProductosLoteService } from 'app/services/detalles-productos-lote.service';
 import { FuncionesService } from 'app/services/funciones.service';
@@ -16,6 +20,8 @@ import { LotesService } from 'app/services/lotes.service';
 import { ProcedimientosDbService } from 'app/services/procedimientos-db.service';
 import { ProductosService } from 'app/services/productos.service';
 import { UserApiService } from 'app/services/user-api.service';
+import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
+import { environment } from 'environments/environment';
 import { ActualizaProductosComponent } from './actualiza-productos/actualiza-productos.component';
 
 @Component({
@@ -95,11 +101,19 @@ export class AsignacionDetalleProductosComponent implements OnInit {
     detalleProducto: null
   }
 
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
     public dialogRef: MatDialogRef<AsignacionDetalleProductosComponent>,
     private fb: FormBuilder,
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private snack: MatSnackBar,
     private lotesService: LotesService,
     private productosService: ProductosService,
@@ -107,21 +121,14 @@ export class AsignacionDetalleProductosComponent implements OnInit {
     private funcionesService: FuncionesService,
     private dialog: MatDialog,    
     private dlotService: DetallesLoteService,
-    private procedimientosDBService: ProcedimientosDbService
+    private procedimientosDBService: ProcedimientosDbService,
+    private loader: AppLoaderService
   ) { }
 
   ngOnInit(): void {    
     this.buildItemForm(this.data.payload);
-    this.userApiService.login().subscribe(
-      res => {          
-        this.token = res;
-        this.loadProducts();
-        this.cargarEmpleados();
-      },
-      err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    );
+    this.loadProducts();
+    this.cargarEmpleados();      
   }
 
   buildItemForm(item) {            
@@ -132,18 +139,19 @@ export class AsignacionDetalleProductosComponent implements OnInit {
 
   loadProducts(){
     this.lote = null;
+    this.loader.open();    
     this.detalleProductoLoteInterface = [];
     let dpli: objectoDetalle[] = [];
     
-    this.lotesService.getOne(this.token.access_token, this.data.payload.codigoLote).subscribe(
+    this.lotesService.getOne(this.data.payload.codigoLote).subscribe(
       res => {        
         this.lote = res;        
         let detallesLote: DetalleLote[] = [];
-        this.dlotService.getAll(this.token.access_token, this.lote.codigoLote).subscribe(
+        this.dlotService.getAll(this.lote.codigoLote).subscribe(
           res => {
             detallesLote = res;            
             detallesLote.forEach(element => {
-              this.productosService.getOne(this.token.access_token, element.producto.idProducto).subscribe(
+              this.productosService.getOne(element.producto.idProducto).subscribe(
                 res => {
                   this.producto = res;
                   this.productos.push(this.producto);              
@@ -174,22 +182,69 @@ export class AsignacionDetalleProductosComponent implements OnInit {
             });        
           },
           err => {
-
+            this.error = err.error;
+            if(this.intentos == this.serviceManager.MAX_INTENTOS){
+              this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }else{
+              if(this.error.statusCode == 401){
+                this.intentos += 1;
+                this.tokenService.login().subscribe(
+                  res => {
+                      this.token = res;
+                      LocalStorageManger.setToken(this.token.access_token);
+                      this.intentos = 1;
+                      this.loadProducts();
+                  },
+                  err => {
+                    this.intentos = 1;
+                    this.loader.close(); 
+                    this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                  }
+                );              
+              }else{
+                this.intentos = 1;
+                this.loader.close();
+                this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            }
           }
         );                
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.loadProducts();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
   }
 
-  expandeDetalle(data: any){                
-    
+  expandeDetalle(data: any){                    
+    this.loader.open();
     this.detalleProductoLoteInterface.find(x => x.lote == data.lote && x.idProducto === data.idProducto).detalles.forEach(elementLote => {
       let cant: number = 0;
-      console.log(elementLote);
-      this.dplService.getOne(this.token.access_token, elementLote.idDetalleProducto, elementLote.idDetalleLote).subscribe(
+      this.dplService.getOne(elementLote.idDetalleProducto, elementLote.idDetalleLote).subscribe(
         res => {
           this.dProductoLote = res;       
           console.log(this.dProductoLote);
@@ -198,8 +253,31 @@ export class AsignacionDetalleProductosComponent implements OnInit {
           elementLote.cantidad = cant;                      
         },
         err => {
-          console.log("Error");
-          this.snack.open(err.message, "ERROR", { duration: 4000 });
+          this.error = err.error;
+          if(this.intentos == this.serviceManager.MAX_INTENTOS){
+            this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }else{
+            if(this.error.statusCode == 401){
+              this.intentos += 1;
+              this.tokenService.login().subscribe(
+                res => {
+                    this.token = res;
+                    LocalStorageManger.setToken(this.token.access_token);
+                    this.intentos = 1;
+                    this.expandeDetalle(data);
+                },
+                err => {
+                  this.intentos = 1;
+                  this.loader.close(); 
+                  this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              );              
+            }else{
+              this.intentos = 1;
+              this.loader.close();
+              this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+            }
+          }
         }
       );                      
     });                  
@@ -215,55 +293,175 @@ export class AsignacionDetalleProductosComponent implements OnInit {
       this.listaActualizar.forEach(element => {
         if(element.cantidad > 0){          
           this.dProductoLoteEncontrado = null;
-          this.dplService.getOne(this.token.access_token, element.detalleProducto, element.detalleLote).subscribe(
+          this.dplService.getOne(element.detalleProducto, element.detalleLote).subscribe(
             res => {
               this.dProductoLoteEncontrado = res;
               if(this.dProductoLoteEncontrado == null){
-                this.dplService.newRow(this.token.access_token, element).subscribe(
+                this.dplService.newRow(element).subscribe(
                   res => {
                     this.dProductoLote = res;
                     cantidadActual += 1;
                     if(cantidadActual == cantidadLista){
-                      this.procedimientosDBService.actualizaCantidadAsiganaDetalleLote(this.token.access_token, this.lote.codigoLote).subscribe(
+                      this.procedimientosDBService.actualizaCantidadAsiganaDetalleLote(this.lote.codigoLote).subscribe(
                         res => {
                           let respuesta: string = res;
                           this.dialogRef.close("Finalizado");
                         },
                         err => {
-                          this.snack.open(err.message, "ERROR", { duration: 4000 });                      
+                          this.error = err.error;
+                          if(this.intentos = this.serviceManager.MAX_INTENTOS){
+                            this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                          }else{
+                            if(this.error.statusCode == 401){
+                              this.intentos += 1;
+                              this.tokenService.login().subscribe(
+                                res => {
+                                    this.token = res;
+                                    LocalStorageManger.setToken(this.token.access_token);
+                                    this.intentos = 1;
+                                    this.submit();
+                                },
+                                err => {
+                                  this.intentos = 1;
+                                  this.loader.close(); 
+                                  this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                                }
+                              );              
+                            }else{
+                              this.intentos = 1;
+                              this.loader.close();
+                              this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                            }
+                          }
                         }
                       );                      
                     }
                   },
                   err => {
-                    this.snack.open(err.message, "ERROR", { duration: 4000 });                
+                    this.error = err.error;
+                    if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                      this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                    }else{
+                      if(this.error.statusCode == 401){
+                        this.intentos += 1;
+                        this.tokenService.login().subscribe(
+                          res => {
+                              this.token = res;
+                              LocalStorageManger.setToken(this.token.access_token);
+                              this.intentos = 1;
+                              this.submit();
+                          },
+                          err => {
+                            this.intentos = 1;
+                            this.loader.close(); 
+                            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                          }
+                        );              
+                      }else{
+                        this.intentos = 1;
+                        this.loader.close();
+                        this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                      }
+                    }
                   }
                 );
               }else{
-                this.dplService.update(this.token.access_token, element).subscribe(
+                this.dplService.update(element).subscribe(
                   res => {
                     this.dProductoLote = res;
                     cantidadActual += 1;
                     if(cantidadActual == cantidadLista){
-                      this.procedimientosDBService.actualizaCantidadAsiganaDetalleLote(this.token.access_token, this.lote.codigoLote).subscribe(
+                      this.procedimientosDBService.actualizaCantidadAsiganaDetalleLote(this.lote.codigoLote).subscribe(
                         res => {
                           let respuesta: string = res;
                           this.dialogRef.close("Detalles Actualizados!!!");
                         },
                         err => {
-                          this.snack.open(err.message, "ERROR", { duration: 4000 });                      
+                          this.error = err.error;
+                          if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                            this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                          }else{
+                            if(this.error.statusCode == 401){
+                              this.intentos += 1;
+                              this.tokenService.login().subscribe(
+                                res => {
+                                    this.token = res;
+                                    LocalStorageManger.setToken(this.token.access_token);
+                                    this.intentos = 1;
+                                    this.submit();
+                                },
+                                err => {
+                                  this.intentos = 1;
+                                  this.loader.close(); 
+                                  this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                                }
+                              );              
+                            }else{
+                              this.intentos = 1;
+                              this.loader.close();
+                              this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                            }
+                          }
                         }
                       );                      
                     }
                   },
                   err => {
-                    this.snack.open(err.message, "ERROR", { duration: 4000 });                
+                    this.error = err.error;
+                    if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                      this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                    }else{
+                      if(this.error.statusCode == 401){
+                        this.intentos += 1;
+                        this.tokenService.login().subscribe(
+                          res => {
+                              this.token = res;
+                              LocalStorageManger.setToken(this.token.access_token);
+                              this.intentos = 1;
+                              this.submit();
+                          },
+                          err => {
+                            this.intentos = 1;
+                            this.loader.close(); 
+                            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                          }
+                        );              
+                      }else{
+                        this.intentos = 1;
+                        this.loader.close();
+                        this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                      }
+                    }
                   }
                 );
               }
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });                                
+              this.error = err.error;
+              if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }else{
+                if(this.error.statusCode == 401){
+                  this.intentos += 1;
+                  this.tokenService.login().subscribe(
+                    res => {
+                        this.token = res;
+                        LocalStorageManger.setToken(this.token.access_token);
+                        this.intentos = 1;
+                        this.submit();
+                    },
+                    err => {
+                      this.intentos = 1;
+                      this.loader.close(); 
+                      this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                    }
+                  );              
+                }else{
+                  this.intentos = 1;
+                  this.loader.close();
+                  this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              }
             }
           );            
         }else{
@@ -305,12 +503,36 @@ export class AsignacionDetalleProductosComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.listaEmpleados = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.cargarEmpleados();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
   }

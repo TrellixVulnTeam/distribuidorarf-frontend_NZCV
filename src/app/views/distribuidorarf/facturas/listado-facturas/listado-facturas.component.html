@@ -1,0 +1,68 @@
+<div class="m-033">
+    <button
+        mat-raised-button
+        color="primary"
+        [routerLink]="['/facturas/add']"
+        routerLinkActive="router-link-active"
+        style="margin-bottom: 10px;"        
+    >
+        Nueva Factura <mat-icon>assignment_add</mat-icon>
+    </button>
+    <mat-form-field class="margin-333" style="width: 50%;float: right;">
+        <input 
+        matInput 
+        placeholder="Filtrar" 
+        value=""
+        (keyup)='updateFilter($event)'>
+    </mat-form-field>
+</div>
+<div style="clear: both;"></div>
+<mat-card-content class="p-0">
+    <ngx-datatable      
+        class="material ml-0 mr-0"
+        [rows]="items"
+        [columnMode]="'force'"
+        [headerHeight]="50"
+        [footerHeight]="50"
+        [scrollbarH]="true"
+        [limit]="10"
+        [rowHeight]="50">
+        <ngx-datatable-column name="Cod. Factura" [flexGrow]="1">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.idfactura }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Cliente" [flexGrow]="1">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.cliente }}
+            </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Fecha Emisión" [flexGrow]="1">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+            {{ row?.fechaemision }}
+        </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Fecha Vencimiento" [flexGrow]="1">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.fechavencimiento }}
+            </ng-template>
+            </ngx-datatable-column>
+        <ngx-datatable-column name="Cantidad. Productos" [flexGrow]="1">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.cantidadproductos }}
+            </ng-template>
+        </ngx-datatable-column>            
+        <ngx-datatable-column name="Total" [flexGrow]="1">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row?.monto }}
+            </ng-template>
+        </ngx-datatable-column>            
+        <ngx-datatable-column name="Acciones" [flexGrow]="1">
+            <ng-template let-row="row" ngx-datatable-cell-template>                
+                <button mat-icon-button mat-sm-button style="color: green;" class="mr-16"><mat-icon>payments</mat-icon></button>                
+                <button mat-icon-button mat-sm-button color="primary" class="mr-16"><mat-icon>print</mat-icon></button>                
+                <button mat-icon-button mat-sm-button color="accent" class="mr-16"><mat-icon>visibility</mat-icon></button>                
+            </ng-template>
+        </ngx-datatable-column>
+    </ngx-datatable>
+</mat-card-content>

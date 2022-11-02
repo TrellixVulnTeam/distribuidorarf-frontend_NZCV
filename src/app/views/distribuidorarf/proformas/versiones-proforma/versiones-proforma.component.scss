@@ -1,0 +1,32 @@
+.example-card {
+    max-width: 47%;
+    float: left;
+  }
+  
+  .example-header-image {
+    background-image: url('https://material.angular.io/assets/img/examples/shiba1.jpg');
+    background-size: cover;
+  }
+
+.content-head{
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.texto-centrado{
+    text-align: center;
+}
+
+.texto-izquierda{
+    text-align: end;
+}
+
+.linea-division{
+    width:100%;text-align:left;margin-left:0;
+}
+
+.version-detail tr th{
+    text-align: inherit;
+}

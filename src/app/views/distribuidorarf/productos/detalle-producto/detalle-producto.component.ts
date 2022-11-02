@@ -97,11 +97,11 @@ export class DetalleProductoComponent implements OnInit {
     //     price: { sale: 0 }
     //   };
     // });
-    this.galeriaProductosService.getAll2(this.token.access_token).subscribe(
+    this.galeriaProductosService.getAll2().subscribe(
       res => {
         this.gProductos = res;              
         this.product = this.gProductos.find(x => x._id === id);        
-        this.productosService.getOne(this.token.access_token, this.product._id).subscribe(
+        this.productosService.getOne(this.product._id).subscribe(
           res => {
             this.producto = res;
           }

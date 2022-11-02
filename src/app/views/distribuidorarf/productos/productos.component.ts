@@ -29,7 +29,7 @@ export class ProductosComponent implements OnInit {
   @ViewChild(MatSidenav) private sideNav: MatSidenav;
 
   public products$: Observable<Product[]>;
-  public categories$: Observable<Categoria[]>;
+  public categories$: string[];
   public activeCategory: string = 'all';
   public filterForm: FormGroup;
   public cart: CartItem[];
@@ -51,22 +51,43 @@ export class ProductosComponent implements OnInit {
     private dialog: MatDialog
   ) { }
 
-  ngOnInit() {    
-    this.categories$ = this.shopService.getCategories();
-    this.buildFilterForm(this.shopService.initialFilters);
+  ngOnInit() {        
+    // this.categories$ = this.shopService.getCategories();
+    this.buildFilterForm(this.shopService.initialFilters);    
+
+    this.userAPIService.login().subscribe(
+      res => {
+        this.token = res;
+
+        this.categoriasService.getAll().subscribe(
+          res => {                     
+            let categories: string[] = [];
+            res.forEach(element => {
+              categories.push(element.nombre);
+            });
+            this.categories$ = categories;
+            this.products$ = this.shopService
+            .getFilteredProduct(this.filterForm)
+            .pipe(
+              map(products => {
+                this.loader.close();           
+                return products;
+              })
+            ); 
+          },
+          err => {          
+            console.log(err);
+          }
+        );
+      },
+      err => {
+        console.log(err);
+      }
+    );
     
     setTimeout(() => {
       this.loader.open();
-    });    
-
-    this.products$ = this.shopService
-      .getFilteredProduct(this.filterForm)
-      .pipe(
-        map(products => {
-          this.loader.close();           
-          return products;
-        })
-      );  
+    });         
 
     this.getCart();
     this.cartData = this.shopService.cartData;

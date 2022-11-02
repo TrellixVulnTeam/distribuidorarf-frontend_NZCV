@@ -1,14 +1,16 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'environments/environment';
 import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
+import { ServiceManager } from 'app/managers/service-manager';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AzureBlobStorageService {
 
-  accountName = environment.AZUREACCOUNTNAME;
-  containerName = environment.AZURECONTAINERNAME;
+  services = ServiceManager;
+  accountName = this.services.AZUREACCOUNTNAME;
+  containerName = this.services.AZURECONTAINERNAME;
 
   constructor() { }
 
@@ -54,6 +56,6 @@ export class AzureBlobStorageService {
     if(sas){
       token = sas;
     }
-    return new BlobServiceClient(`https://${this.accountName}.blob.core.windows.net?${token}`).getContainerClient(this.containerName);
+    return new BlobServiceClient(`https://${this.accountName}.blob.core.windows.net?${token}`).getContainerClient(this.containerName.toString());
   }
 }

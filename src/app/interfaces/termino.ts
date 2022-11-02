@@ -2,7 +2,7 @@ export interface Termino {
     idTermino: number;
     nombre: string;
     descripcion: string;
-    valor: string;
+    valor: number;
     fechaCreacion: Date;
     fechaUltimaModificacion: Date;
 }

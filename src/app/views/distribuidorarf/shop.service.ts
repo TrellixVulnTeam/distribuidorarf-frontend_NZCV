@@ -18,6 +18,7 @@ import { GaleriaProductosService } from 'app/services/galeria-productos.service'
 import { GproductoDto } from 'app/interfaces/dto/gproducto-dto';
 import { environment } from 'environments/environment';
 import { HttpClient } from '@angular/common/http';
+import { ServiceManager } from 'app/managers/service-manager';
 
 
 
@@ -93,14 +94,15 @@ export class ShopService {
   productos: Producto[] = [];
   gProductos: GproductoDto[] = [];
   productosTienda: Product[] = [];
+  services = ServiceManager;
 
   BASE_URL: string = environment.BASE_URL;
-  entity: string = environment.SERVICE_GALERIA_PRODUCTO;
+  entity: string = this.services.SERVICE_GALERIA_PRODUCTO;
 
   public getProducts(): Observable<Product[]> {
     let productDB = new ProductDB();
 
-    this.galeriaProductosService.getAll2(this.token.access_token).subscribe(
+    this.galeriaProductosService.getAll2().subscribe(
       res => {        
         this.gProductos = res;      
         this.gProductos.forEach(element => {
@@ -136,7 +138,7 @@ export class ShopService {
       res => {
         this.token = res;
 
-        this.categoriasService.getAll(this.token.access_token).subscribe(
+        this.categoriasService.getAll().subscribe(
           res => {         
             res.forEach(element => {
               categories.push(element.nombre);
@@ -161,7 +163,7 @@ export class ShopService {
       filterForm.valueChanges
       .pipe(
         startWith(this.initialFilters),
-        debounceTime(1500)
+        debounceTime(500)
       )
     )
     .pipe(
@@ -175,7 +177,8 @@ export class ShopService {
   * You should implement server side filtering instead.
   */ 
   private filterProducts(products: Product[], filterData): Observable<Product[]> {            
-
+    console.log('Data para filtrar');
+    console.log(filterData);
     let filteredProducts = products.filter(p => {
       let isMatch: Boolean;
       let match = {
@@ -197,15 +200,16 @@ export class ShopService {
         match.search = false;
       }
       // Category filter
-      if (
-        filterData.category === p.category 
-        || !filterData.category 
-        || filterData.category === 'all'
-      ) {
-        match.caterory = true;
-      } else {
-        match.caterory = false;
-      }
+      
+        if (
+          filterData.category === p.category
+          || !filterData.category 
+          || filterData.category === 'all'
+        ) {
+          match.caterory = true;
+        } else {
+          match.caterory = false;
+        }     
       // Price filter
       if (
         p.price.sale >= filterData.minPrice 
@@ -232,7 +236,7 @@ export class ShopService {
       return true;
     })
 
-    console.log("filterproductos")
+      console.log("filterproductos")
       console.log(products);
       console.log(filteredProducts);
 

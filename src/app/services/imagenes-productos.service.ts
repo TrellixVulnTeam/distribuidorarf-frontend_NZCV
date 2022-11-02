@@ -2,6 +2,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ImagenProductoDto } from 'app/interfaces/dto/imagen-producto-dto';
 import { ImagenProducto } from 'app/interfaces/imagen-producto';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
 import { environment } from 'environments/environment';
 import { Observable } from 'rxjs';
 
@@ -10,33 +12,34 @@ import { Observable } from 'rxjs';
 })
 export class ImagenesProductosService {
 
+  services = ServiceManager;
   BASE_URL: string = environment.BASE_URL;
-  entity: string = environment.SERVICE_IMAGENES_PRODUCTO;
+  entity: string = this.services.SERVICE_IMAGENES_PRODUCTO;
 
   constructor(private http: HttpClient) { }
 
-  getAll(token: string): Observable<ImagenProducto[]>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  getAll(): Observable<ImagenProducto[]>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.get<ImagenProducto[]>(`${this.BASE_URL}/${this.entity}`,{headers: heads});
   }
 
-  getOne(token: string, idImagenProducto: number): Observable<ImagenProducto>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  getOne(idImagenProducto: number): Observable<ImagenProducto>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.get<ImagenProducto>(`${this.BASE_URL}/${this.entity}/${idImagenProducto}`,{headers: heads});
   }
 
-  newRow(token: string, imagenProductoDTO: ImagenProductoDto): Observable<ImagenProducto>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  newRow(imagenProductoDTO: ImagenProductoDto): Observable<ImagenProducto>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.post<ImagenProducto>(`${this.BASE_URL}/${this.entity}`, imagenProductoDTO,{headers: heads});
   }
 
-  update(token: string, idImagenProducto: number, imagenProductoDTO: ImagenProductoDto): Observable<ImagenProducto>{
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  update(idImagenProducto: number, imagenProductoDTO: ImagenProductoDto): Observable<ImagenProducto>{
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.put<ImagenProducto>(`${this.BASE_URL}/${this.entity}/${idImagenProducto}`, imagenProductoDTO,{headers: heads});
   }
 
-  delete(token: string, idImagenProducto: number){
-    let heads = new HttpHeaders().set('Authorization', 'bearer ' + token);
+  delete(idImagenProducto: number){
+    let heads = new HttpHeaders().set('Authorization', 'bearer ' + LocalStorageManger.getToken());
     return this.http.delete(`${this.BASE_URL}/${this.entity}/${idImagenProducto}`,{headers: heads});
   }
 }

@@ -19,6 +19,11 @@ import { ProductoDto } from 'app/interfaces/dto/producto-dto';
 import { DetalleProductoDto } from 'app/interfaces/dto/detalle-producto-dto';
 import { Persona } from 'app/interfaces/persona';
 import { FuncionesService } from 'app/services/funciones.service';
+import { StringManager } from 'app/managers/string-manager';
+import { environment } from 'environments/environment';
+import { ErrorBk } from 'app/interfaces/error-bk';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { ServiceManager } from 'app/managers/service-manager';
 
 @Component({
   selector: 'app-kardex',
@@ -31,9 +36,16 @@ export class KardexComponent implements OnInit {
   items: Kardex[] = [];
   listaEmpleados: Persona[] = [];
 
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+
   token: Token = {
     access_token: null
-  }
+  };
+
+  intentos = 0;
 
   producto: Producto = {
     cantidadExistencias: null,
@@ -70,7 +82,8 @@ export class KardexComponent implements OnInit {
     codigoResponsable: null,
     esRetiroTemporal: null,
     fechaReIngreso: null,
-    finalizadoReingreso: null
+    finalizadoReingreso: null,
+    detalleProforma: null
   }
 
   kardexDTO: KardexDto = {
@@ -86,7 +99,8 @@ export class KardexComponent implements OnInit {
     codigoResponsable: null,
     esRetiroTemporal: null,
     fechaReIngreso: null,
-    finalizadoReingreso: null
+    finalizadoReingreso: null,
+    detalleProforma: null
   }
 
   productoDTO: ProductoDto = {
@@ -115,7 +129,8 @@ export class KardexComponent implements OnInit {
   }
 
   cantidadVendidas: number = 0;
-
+  strings = StringManager;
+  serviceManager = ServiceManager;
 
   constructor(
     private fb: FormBuilder,
@@ -130,17 +145,8 @@ export class KardexComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-
-    this.buildItemForm();              
-    this.tokenService.login().subscribe(
-      res => {
-        this.token = res;
-        this.cargarEmpleados();
-      },
-      err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
-      }
-    )
+    this.buildItemForm();                
+    this.cargarEmpleados();
   }
 
   buildItemForm(){
@@ -172,16 +178,16 @@ export class KardexComponent implements OnInit {
     
     if(this.basicForm.controls.id.value === null || this.basicForm.controls.id.value === ''){
       this.loader.close();
-      this.snack.open("Debe ingresar valor de búsqueda", "ALERTA", { duration: 4000 });          
+      this.snack.open(this.strings.msg_find_value, this.strings.alert_title, { duration: environment.TIEMPO_NOTIFICACION });          
       return;
     }
 
-    this.productosService.getOne(this.token.access_token, this.basicForm.controls.id.value).subscribe(
+    this.productosService.getOne(this.basicForm.controls.id.value).subscribe(
       res => {
         this.producto = res;                      
         if(this.producto == null){
           this.loader.close();
-          this.snack.open("El producto no existe", "ALERTA", { duration: 4000 });          
+          this.snack.open(this.strings.msg_producto_no_existe, this.strings.alert_title, { duration: environment.TIEMPO_NOTIFICACION });          
         }else{
           this.items = [];
           this.basicForm.controls.descripcion.setValue(this.producto.nombre);
@@ -190,16 +196,15 @@ export class KardexComponent implements OnInit {
           this.basicForm.controls.precio1.setValue(this.producto.precios.find(x => x.nombre === "precio1").precioVenta);
           this.basicForm.controls.cantidadMinima.setValue(this.producto.cantidadMinima);
           // debe buscar los kadex asociados a ese producto          
-          this.kardexService.getAll(this.token.access_token, this.producto.idProducto).subscribe(
-            res => {
+          this.kardexService.getAll(this.producto.idProducto).subscribe(
+            res => {              
               this.items = res;                            
               this.items.forEach(element => {                
                 if(element.unidades < 0 && element.esRetiro != true){ //Cuando es retiro no se contabiliza en unidades vendidas.
                   this.cantidadVendidas = this.cantidadVendidas + Math.abs(element.unidades);                  
                 }                
-
                 if(element.persona != null){
-                  this.personasService.getOne(this.token.access_token, element.persona).subscribe(
+                  this.personasService.getOne(element.persona).subscribe(
                     res => {
                       element.persona = res.nombre + ' ' + res.apellidos;
                     }
@@ -207,7 +212,7 @@ export class KardexComponent implements OnInit {
                 }                
 
                 let f = new Date(element.fechaUltimaModificacion.toLocaleString());                
-                console.log(f.setHours(f.getHours()-6));  
+                f.setHours(f.getHours() + (f.getTimezoneOffset() / 60) * -1);                
                 element.fechaUltimaModificacion = f;
 
               });
@@ -215,13 +220,59 @@ export class KardexComponent implements OnInit {
               this.loader.close();
             },
             err => {
-              this.snack.open(err.message, "ERROR", { duration: 4000 });              
+              this.error = err.error;
+              if(this.intentos == this.serviceManager.MAX_INTENTOS){
+                this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }else{
+                if(this.error.statusCode == 401){
+                  this.intentos += 1;
+                  this.tokenService.login().subscribe(
+                    res => {
+                        this.token = res;
+                        LocalStorageManger.setToken(this.token.access_token);
+                        this.intentos = 1;
+                        this.buscarProducto();
+                    },
+                    err => {
+                      this.loader.close(); 
+                      this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+                    }
+                  );              
+                }else{
+                  this.intentos = 1;
+                  this.loader.close();
+                  this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+                }
+              }               
             }
           );
         }
       }
       ,err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos == this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.buscarProducto();
+              },
+              err => {
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }                       
       }
     );
   }
@@ -254,7 +305,7 @@ export class KardexComponent implements OnInit {
     }    
   }
 
-  openPopUpBusqueda(data: any = {},){
+  openPopUpBusqueda(data: any = {}){
     let title = 'Buscar Producto';
     let dialogRef: MatDialogRef<any> = this.dialog.open(BusquedaComponent, {
       width: '1020px',
@@ -317,13 +368,37 @@ export class KardexComponent implements OnInit {
 
   finalizaKardexRetiroTemporal(item, codigo){
     this.crearObjetoKardexRetiroTemporalDTO(item, codigo);
-    this.kardexService.update(this.token.access_token, item.idKardex, this.kardexRetiroTemporalDTO).subscribe(
+    this.kardexService.update(item.idKardex, this.kardexRetiroTemporalDTO).subscribe(
       res => {
         this.snack.open("Productos desechados.", "Actualización!!", { duration: 4000 }); 
         this.buscarProducto();
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 }); 
+        this.error = err.error;
+        if(this.intentos = this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.finalizaKardexRetiroTemporal(item, codigo);
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }               
       }
     );
   }
@@ -357,12 +432,36 @@ export class KardexComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.listaEmpleados = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.error = err.error;
+        if(this.intentos = this.serviceManager.MAX_INTENTOS){
+          this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+        }else{
+          if(this.error.statusCode == 401){
+            this.intentos += 1;
+            this.tokenService.login().subscribe(
+              res => {
+                  this.token = res;
+                  LocalStorageManger.setToken(this.token.access_token);
+                  this.intentos = 1;
+                  this.cargarEmpleados();
+              },
+              err => {
+                this.intentos = 1;
+                this.loader.close(); 
+                this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+            );              
+          }else{
+            this.intentos = 1;
+            this.loader.close();
+            this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        }
       }
     );
   }

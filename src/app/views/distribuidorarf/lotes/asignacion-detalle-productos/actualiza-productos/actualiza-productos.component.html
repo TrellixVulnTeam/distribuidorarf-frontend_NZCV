@@ -4,12 +4,12 @@
         <div fxLayout="row wrap">
             <div fxFlex="100" fxFlex.gt-xs="100" class="pr-16">
                 <mat-form-field style="width: 100%;">
-                  <input matInput placeholder="{{'AUTORIZACION' | translate}}" formControlName="autorizacionEmpleado" type="password">
+                  <input matInput placeholder="Autorización" formControlName="autorizacionEmpleado" type="password">
                 </mat-form-field>          
             </div>
             <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                 <div class="container-item-board">
-                    <h2>{{'PRODUCTS' | translate}}</h2>
+                    <h2>Productos</h2>
                     <mat-form-field class="margin-333" style="width: 50%;float: right;">
                         <input 
                             matInput 
@@ -47,7 +47,7 @@
             </div>
             <div fxFlex="100" fxFlex.gt-xs="50" class="pr-16">
                 <div class="container-item-board">
-                    <h2>{{'LOT' | translate}}</h2>          
+                    <h2>Lote</h2>          
                     <mat-form-field class="margin-333" style="width: 50%;float: right;">
                         <input 
                             matInput 
@@ -105,5 +105,5 @@
 <div>    
   <button mat-button color="warn" type="button" (click)="dialogRef.close(false)">Cancel</button>        
   <span fxFlex></span>
-  <button mat-raised-button color="primary" [disabled]="itemForm.invalid" (click)="submit()">{{"SAVE" | translate }}</button>          
+  <button mat-raised-button color="primary" [disabled]="itemForm.invalid" (click)="submit()">Guardar</button>          
 </div>

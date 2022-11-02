@@ -16,6 +16,12 @@ import { UserApiService } from 'app/services/user-api.service';
 import { MAT_DATE_FORMATS } from '@angular/material/core';
 import { Kardex } from 'app/interfaces/kardex';
 import Swal from 'sweetalert2';
+import { ErrorBk } from 'app/interfaces/error-bk';
+import { ServiceManager } from 'app/managers/service-manager';
+import { StringManager } from 'app/managers/string-manager';
+import { LocalStorageManger } from 'app/managers/local-storage-manger';
+import { environment } from 'environments/environment';
+import { AppLoaderService } from 'app/shared/services/app-loader/app-loader.service';
 
 export const MY_DATE_FORMATS = {
   parse: {
@@ -78,7 +84,8 @@ export class FormularioKardexComponent implements OnInit {
     codigoResponsable: null,
     esRetiroTemporal: null,
     fechaReIngreso: null,
-    finalizadoReingreso: null
+    finalizadoReingreso: null,
+    detalleProforma: null
   }
 
   kardexRetiroTemporalDTO: KardexDto = {
@@ -94,7 +101,8 @@ export class FormularioKardexComponent implements OnInit {
     codigoResponsable: null,
     esRetiroTemporal: null,
     fechaReIngreso: null,
-    finalizadoReingreso: null
+    finalizadoReingreso: null,
+    detalleProforma: null
   }
 
   kardexEncontrado: Kardex = {
@@ -113,7 +121,8 @@ export class FormularioKardexComponent implements OnInit {
     finalizadoReingreso: null,
     fechaCreacion: null,
     fechaUltimaModificacion: null,
-    idKardex: null
+    idKardex: null,
+    detalleProforma: null
   }
 
   detalleDTO: DetalleProductoDto = {
@@ -130,52 +139,57 @@ export class FormularioKardexComponent implements OnInit {
   listaEmpleados: Persona[] = [];
   maxCant: number = 1000000;
 
+  error: ErrorBk = {
+    statusCode: null,
+    message: null
+  };
+  intentos = 0;
+  serviceManager = ServiceManager;
+  strings = StringManager;
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
     public dialogRef: MatDialogRef<FormularioKardexComponent>,
     private fb: FormBuilder,
     private snack: MatSnackBar,
     private productosService: ProductosService,
-    private userApiService: UserApiService,
+    private tokenService: UserApiService,
     private kardexService: KardexService,
     private detallesProductosSerice: DetallesProductosService,
     private funcionesService: FuncionesService,
+    private loader: AppLoaderService,
   ) { }
 
   ngOnInit(): void {        
     this.buildItemForm(this.data.payload);        
-    this.userApiService.login().subscribe(
+    this.cargarEmpleados();
+    if(this.data.recibir == true){
+      let tagIcono = this.iconoTemporalElement.nativeElement;
+      tagIcono.classList.add('invisible');
+      this.itemForm.controls.concepto.setValue('Inclusión de mercadería');
+      if(this.data.idDevolucion > 0){
+        this.mensaje = 'La cantidad de productos no re-integrados en este proceso quedarán desechados automáticamente.';            
+        // Si el recibir es producto de un reintegro de producto que se habia sacado de inventario por algun motivo busca el kardex correspondiente
+        this.obtenerKardex();
+      }          
+    }else{      
+      this.itemForm.controls.concepto.setValue('Retiro de mercadería');
+    }            
+  }
+
+  obtenerKardex(){    
+    this.kardexService.getOne(this.data.payload.idProducto, this.data.idDevolucion).subscribe(
       res => {
-        this.token = res;       
-        this.cargarEmpleados();
-        if(this.data.recibir == true){
-          let tagIcono = this.iconoTemporalElement.nativeElement;
-          tagIcono.classList.add('invisible');
-          this.itemForm.controls.concepto.setValue('Inclusión de mercadería');
-          if(this.data.idDevolucion > 0){
-            this.mensaje = 'La cantidad de productos no re-integrados en este proceso quedarán desechados automáticamente.';            
-            // Si el recibir es producto de un reintegro de producto que se habia sacado de inventario por algun motivo busca el kardex correspondiente
-            this.kardexService.getOne(this.token.access_token, this.data.payload.idProducto, this.data.idDevolucion).subscribe(
-              res => {
-                this.kardexEncontrado = res;
-                this.maxCant = Math.abs(this.kardexEncontrado.unidades);
-                this.idDetalle = this.kardexEncontrado.idDetalleProducto;
-                this.itemForm.controls.concepto.setValue('Recibido de retiro temporal: ' + this.kardexEncontrado.idKardex);
-                this.cambiaDetalle();
-              },
-              err => {
-                this.snack.open(err.message, "ERROR", { duration: 4000 });
-              }
-            );
-          }          
-        }else{      
-          this.itemForm.controls.concepto.setValue('Retiro de mercadería');
-        }        
+        this.kardexEncontrado = res;
+        this.maxCant = Math.abs(this.kardexEncontrado.unidades);
+        this.idDetalle = this.kardexEncontrado.idDetalleProducto;
+        this.itemForm.controls.concepto.setValue('Recibido de retiro temporal: ' + this.kardexEncontrado.idKardex);
+        this.cambiaDetalle();
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.obtenerKardex);
       }
-    );        
+    );
   }
 
   submit(){
@@ -220,71 +234,71 @@ export class FormularioKardexComponent implements OnInit {
 
   finalizaKardexRetiroTemporal(){
     this.crearObjetoKardexRetiroTemporalDTO();
-    this.kardexService.update(this.token.access_token, this.kardexEncontrado.idKardex, this.kardexRetiroTemporalDTO).subscribe(
+    this.kardexService.update(this.kardexEncontrado.idKardex, this.kardexRetiroTemporalDTO).subscribe(
       res => {
         this.snack.open("Re-inserción finalizada con éxito.", "Actualización!!", { duration: 4000 }); 
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 }); 
+        this.reintento(err, nombresMetodos.finalizaKardexRetiroTemporal);
       }
     );
   }
 
   retirar(){
     // -- inserta en kardex        
-    this.kardexService.newRow(this.token.access_token, this.kardexDTO).subscribe(
+    this.kardexService.newRow(this.kardexDTO).subscribe(
       res => {
         // -- actualiza el detalle        
-        this.detallesProductosSerice.update(this.token.access_token, this.detalleDTO.idDetalleProducto, this.detalleDTO).subscribe(
+        this.detallesProductosSerice.update(this.detalleDTO.idDetalleProducto, this.detalleDTO).subscribe(
           res => {
             // -- actualiza el producto
             this.productoDTO.cantidadExistencias = this.productoDTO.cantidadExistencias - Math.abs(this.kardexDTO.unidades);
-            this.productosService.update(this.token.access_token, this.productoDTO.idProducto, this.productoDTO).subscribe(
+            this.productosService.update(this.productoDTO.idProducto, this.productoDTO).subscribe(
               res => {
                 this.dialogRef.close(res);
               },
               err => {
-                this.snack.open(err.message, "ERROR", { duration: 4000 }); 
+                this.reintento(err, nombresMetodos.retirar);
               }
             );
           },
           err => {
-            this.snack.open(err.message, "ERROR", { duration: 4000 });
+            this.reintento(err, nombresMetodos.retirar);
           }
         );
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.retirar);
       }
     );
   }
 
   recibir(){    
     // -- inserta en kardex        
-    this.kardexService.newRow(this.token.access_token, this.kardexDTO).subscribe(
+    this.kardexService.newRow(this.kardexDTO).subscribe(
       res => {
         // -- actualiza el detalle        
-        this.detallesProductosSerice.update(this.token.access_token, this.detalleDTO.idDetalleProducto, this.detalleDTO).subscribe(
+        this.detallesProductosSerice.update(this.detalleDTO.idDetalleProducto, this.detalleDTO).subscribe(
           res => {
             // -- actualiza el producto
             this.productoDTO.cantidadExistencias = this.productoDTO.cantidadExistencias + Math.abs(this.kardexDTO.unidades);
-            this.productosService.update(this.token.access_token, this.productoDTO.idProducto, this.productoDTO).subscribe(
+            this.productosService.update(this.productoDTO.idProducto, this.productoDTO).subscribe(
               res => {
                 this.snack.open("Producto recibido.", "Éxito!!", { duration: 4000 }); 
                 this.dialogRef.close(res);
               },
               err => {
-                this.snack.open(err.message, "ERROR", { duration: 4000 }); 
+                this.reintento(err, nombresMetodos.recibir);
               }
             );
           },
           err => {
-            this.snack.open(err.message, "ERROR", { duration: 4000 });
+            this.reintento(err, nombresMetodos.recibir);
           }
         );
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.recibir);
       }
     );
   }
@@ -390,12 +404,12 @@ export class FormularioKardexComponent implements OnInit {
   }
 
   cargarEmpleados(){
-    this.funcionesService.obtenerEmpleados(this.token.access_token).subscribe(
+    this.funcionesService.obtenerEmpleados().subscribe(
       res => {
         this.listaEmpleados = res;
       },
       err => {
-        this.snack.open(err.message, "ERROR", { duration: 4000 });
+        this.reintento(err, nombresMetodos.cargarEmpleados);
       }
     );
   }
@@ -426,4 +440,52 @@ export class FormularioKardexComponent implements OnInit {
     }
   }
 
+  reintento(err: any, metodo: string, data?: any, isNew?: boolean, url?: string, id?: number){    
+    this.error = err.error;
+    if(this.intentos == this.serviceManager.MAX_INTENTOS){
+      this.snack.open(this.strings.error_mgs_cantidad_intentos, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+    }else{
+      if(this.error.statusCode == 401){
+        this.intentos += 1;
+        this.tokenService.login().subscribe(
+          res => {
+              this.token = res;
+              LocalStorageManger.setToken(this.token.access_token);
+              this.intentos = 1;
+              if(metodo === nombresMetodos.cargarEmpleados){
+                this.cargarEmpleados();
+              }else if(metodo === nombresMetodos.obtenerKardex){
+                this.obtenerKardex();
+              }else if(metodo === nombresMetodos.finalizaKardexRetiroTemporal){
+                this.finalizaKardexRetiroTemporal();
+              }else if(metodo === nombresMetodos.retirar){
+                this.retirar();
+              }else if(metodo === nombresMetodos.recibir){
+                this.recibir();
+              }else{
+                this.snack.open(this.strings.error_mgs_metodo_no_encontrado + metodo, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+              }
+          },
+          err => {
+            this.intentos = 1;
+            this.loader.close(); 
+            this.snack.open(err.message, this.strings.error_title, { duration: environment.TIEMPO_NOTIFICACION });
+          }
+        );              
+      }else{
+        this.intentos = 1;
+        this.loader.close();
+        this.snack.open(this.strings.factura_error_lista + err.message, this.strings.cerrar_title, { duration: environment.TIEMPO_NOTIFICACION });
+      }
+    }
+  }
+
+}
+
+enum nombresMetodos {  
+  cargarEmpleados = "cargarEmpleados",
+  obtenerKardex = "obtenerKardex",
+  finalizaKardexRetiroTemporal = "finalizaKardexRetiroTemporal",
+  retirar = "retirar",
+  recibir = "recibir"
 }

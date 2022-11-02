@@ -13,7 +13,7 @@
                 </mat-expansion-panel-header>
                 <ul class="product-categories">
                   <li [ngClass]="{'fw-500': 'all' === activeCategory}" (click)="setActiveCategory('all')">Todos</li>
-                  <li *ngFor="let c of categories$ | async" [ngClass]="{'fw-500': c === activeCategory}" (click)="setActiveCategory(c)">{{c}}</li>
+                  <li *ngFor="let c of categories$" [ngClass]="{'fw-500': c === activeCategory}" (click)="setActiveCategory(c)">{{c}}</li>
                 </ul>
               </mat-expansion-panel>
               <!-- Price -->
@@ -96,7 +96,7 @@
                 <div class="info-wrap p-16">
                   <div class="main-info">                    
                     <h3 class="title" [routerLink]="['/distribuidorarf/detalle/', product._id]">{{product.name}}</h3>
-                    <p class="text-muted p-line">{{'CODE' | translate}}: {{product._id}}</p>
+                    <p class="text-muted p-line">Código: {{product._id}}</p>
                     <p class="text-muted p-line">{{product?.subtitle}}</p>
                     <p class="text-muted p-line">
                       <strong>Categoría:</strong> {{product?.category}}</p>

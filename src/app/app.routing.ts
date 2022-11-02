@@ -38,7 +38,15 @@ export const rootRouterConfig: Routes = [
       {
         path: 'search',
         loadChildren: () => import('./views/search-view/search-view.module').then(m => m.SearchViewModule)
-      }
+      },
+      {
+        path: 'proformas',
+        loadChildren: () => import('./views/distribuidorarf/proformas/proformas.module').then(m => m.ProformasModule)
+      },
+      {
+        path: 'facturas',
+        loadChildren: () => import('./views/distribuidorarf/facturas/facturas.module').then(m => m.FacturasModule)
+      },
     ]
   },
   {
